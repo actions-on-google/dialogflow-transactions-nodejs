@@ -1,4 +1,4 @@
-# Actions on Google Transactions Sample using Node.js
+# Actions on Google: Transactions Sample using Node.js
 
 This sample shows everything you need to facilitate transactions for your app.
 It includes the main checkout flows, including checking for transaction
