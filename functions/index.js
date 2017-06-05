@@ -74,8 +74,9 @@ exports.transactions = functions.https.onRequest((request, response) => {
 
   function deliveryAddressComplete (app) {
     if (app.getDeliveryAddress()) {
-      console.log('DELIVERY ADDRESS: ' +
-        app.getDeliveryAddress().postalAddress.addressLines[0]);
+      console.log('DELIVERY ADDRESS: '
+        + app.getDeliveryAddress().postalAddress.addressLines[0]);
+      app.data.deliveryAddress = app.getDeliveryAddress();
       app.ask('Great, got your address! Now say "confirm transaction".');
     } else {
       app.tell('Transaction failed.');
@@ -110,6 +111,10 @@ exports.transactions = functions.https.onRequest((request, response) => {
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
       ])
       .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 35);
+
+    if (app.data.deliveryAddress) {
+      order.addLocation(app.Transactions.LocationType.DELIVERY, app.data.deliveryAddress);
+    }
 
     // If in sandbox testing mode, do not require payment
     if (app.isInSandbox()) {
