@@ -16,25 +16,28 @@ comments in `index.js` demonstrating this behavior.
 
 ### Steps
 1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing.
-1. Click "Use API.AI" and then "Create Actions on API.AI".
-1. Click "Save" to save the project.
+1. Click *Use API.AI* and then *Create Actions on API.AI*.
+1. Click *Save* to save the project.
 1. Click on the gear icon to see the project settings.
-1. Select "Export and Import".
-1. Select "Restore from zip". Follow the directions to restore from the Transactions.zip file in this repo.
-1. Deploy the fulfillment webhook in index.js to your preferred hosting environment
-(we recommend [Google Cloud Functions](https://cloud.google.com/functions/docs/tutorials/http)).
-1. In the Fulfillment page of the API.AI console, enable Webhook, set the URL to the hosting URL, then save.
-1. Open API.AI's Integrations page, open the Settings menu for Actions on Google.
-1. Click Update.
-1. Return to the Actions console and set up your App info, including images, a
+1. Select *Export and Import*.
+1. Select *Restore from zip*. Follow the directions to restore from the Transactions.zip file in this repo.
+1. Deploy the fulfillment webhook provided in the functions folder using [Google Cloud Functions for Firebase](https://firebase.google.com/docs/functions/):
+   1. Create a Firebase project in the [Firebase Console](https://console.firebase.google.com/) if you don't have one already.
+   1. Follow the instructions to [set up and initialize Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/get-started#set_up_and_initialize_functions_sdk). Make sure to reply `N` when asked to overwrite existing files by the Firebase CLI.
+   1. Run `firebase deploy --only functions` and take note of the endpoint where the fulfillment webhook has been published. It should look like `Function URL (transactions): https://${REGION}-${PROJECT}.cloudfunctions.net/transactions`
+1. Go back to the API.AI console and select *Fulfillment* from the left navigation menu.
+1. Enable *Webhook*, set the value of *URL* to the `Function URL` from the previous step, then click *Save*.
+1. Open API.AI's *Integrations* page, open the *Settings* menu for *Actions on Google*, click *Authorize* if needed, then click *Update*.
+1. Click *Visit Console* to return to the Actions console, and set up your App info, including images, a
 contact email, and privacy policy. This information can all be edited before
 submitting for review.
 1. Check the box at the bottom to indicate this app uses Transactions.
-1. Return to your App overview, and hit test.
-1. In the left panel, click Simulator.
-1. Type "Talk to my test app" in the simulator, or say "OK Google,
-talk to my test app" to any Actions on Google enabled device signed into your
+1. Set up a payment method for your account in the Google Assistant settings on your phone if you haven't set one up already.
+1. Return to your App overview, and hit *Test*.
+1. In the left panel, click *Simulator*.
+1. Type `Talk to my test app` in the simulator, or say `OK Google, talk to my test app` to any Actions on Google enabled device signed into your
 developer account.
+1. Follow the instructions from the app to test transactions.
 1. To test payment when confirming transaction, uncheck the box in the Actions
 console simulator indicating testing in Sandbox mode.
 

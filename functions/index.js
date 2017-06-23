@@ -15,6 +15,7 @@
 
 process.env.DEBUG = 'actions-on-google:*';
 let ApiAiApp = require('actions-on-google').ApiAiApp;
+const functions = require('firebase-functions');
 
 // APIAI Actions
 const TRANSACTION_CHECK_NO_PAYMENT = 'transaction.check.no.payment';
@@ -26,7 +27,7 @@ const DELIVERY_ADDRESS_COMPLETE = 'delivery.address.complete';
 const TRANSACTION_DECISION_ACTION_PAYMENT = 'transaction.decision.action';
 const TRANSACTION_DECISION_COMPLETE = 'transaction.decision.complete';
 
-exports.transactions = (request, response) => {
+exports.transactions = functions.https.onRequest((request, response) => {
   const app = new ApiAiApp({ request, response });
   console.log('Request headers: ' + JSON.stringify(request.headers));
   console.log('Request body: ' + JSON.stringify(request.body));
@@ -73,8 +74,8 @@ exports.transactions = (request, response) => {
 
   function deliveryAddressComplete (app) {
     if (app.getDeliveryAddress()) {
-      console.log('DELIVERY ADDRESS: '
-        + app.getDeliveryAddress().postalAddress.addressLines[0]);
+      console.log('DELIVERY ADDRESS: ' +
+        app.getDeliveryAddress().postalAddress.addressLines[0]);
       app.ask('Great, got your address! Now say "confirm transaction".');
     } else {
       app.tell('Transaction failed.');
@@ -140,8 +141,8 @@ exports.transactions = (request, response) => {
   }
 
   function transactionDecisionComplete (app) {
-    if (app.getTransactionDecision()
-      && app.getTransactionDecision().userDecision ===
+    if (app.getTransactionDecision() &&
+      app.getTransactionDecision().userDecision ===
         app.Transactions.ConfirmationDecision.ACCEPTED) {
       let googleOrderId = app.getTransactionDecision().order.googleOrderId;
 
@@ -157,12 +158,11 @@ exports.transactions = (request, response) => {
             confirmedActionOrderId: '<UNIQUE_ORDER_ID>'
           }))
         .addSimpleResponse('Transaction completed! You\'re all set!'));
-    } else if (app.getTransactionDecision()
-      && app.getTransactionDecision().userDecision ===
+    } else if (app.getTransactionDecision() &&
+      app.getTransactionDecision().userDecision ===
         app.Transactions.ConfirmationDecision.DELIVERY_ADDRESS_UPDATED) {
       return deliveryAddress(app);
-    }
-    else {
+    } else {
       app.tell('Transaction failed.');
     }
   }
@@ -178,4 +178,4 @@ exports.transactions = (request, response) => {
   actionMap.set(TRANSACTION_DECISION_COMPLETE, transactionDecisionComplete);
 
   app.handleRequest(actionMap);
-};
+});
