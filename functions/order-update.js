@@ -47,7 +47,7 @@ jwtClient.authorize(function (err, tokens) {
   let bearer = 'Bearer ' + tokens.access_token;
   let options = {
     method: 'POST',
-    url: 'http://actions.googleapis.com/v2/conversations:send',
+    url: 'https://actions.googleapis.com/v2/conversations:send',
     headers: {
       'Authorization': bearer
     },
