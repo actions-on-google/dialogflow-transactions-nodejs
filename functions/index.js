@@ -59,8 +59,7 @@ exports.transactions = functions.https.onRequest((request, response) => {
   }
 
   function transactionCheckComplete (app) {
-    if (app.getTransactionRequirementsResult().resultType ===
-      app.Transactions.ResultType.ACCEPTED) {
+    if (app.getTransactionRequirementsResult() === app.Transactions.ResultType.OK) {
       // Normally take the user through cart building flow
       app.ask('Looks like you\'re good to go! Try saying "Get Delivery Address".');
     } else {
