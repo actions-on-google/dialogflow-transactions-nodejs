@@ -115,7 +115,7 @@ exports.transactions = functions.https.onRequest((request, response) => {
           .setQuantity(1)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
       ])
-      .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 35);
+      .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 38, 990000000);
 
     // If in sandbox testing mode, do not require payment
     if (app.isInSandbox()) {
