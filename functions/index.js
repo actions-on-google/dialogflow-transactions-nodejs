@@ -98,8 +98,8 @@ exports.transactions = functions.https.onRequest((request, response) => {
             .setQuantity(1)
             .addSublines(
               app.buildLineItem('memoirs_epilogue', 'Special memoir epilogue')
-              .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
-              .setQuantity(1)
+                .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
+                .setQuantity(1)
             ),
           app.buildLineItem('memoirs_4', 'Our memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 6, 490000000)
