@@ -87,13 +87,20 @@ exports.transactions = functions.https.onRequest((request, response) => {
         .addLineItems([
           app.buildLineItem('memoirs_1', 'My Memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
-            .setQuantity(1),
+            .setQuantity(1)
+            .addSublines('Note from the author'),
           app.buildLineItem('memoirs_2', 'Memoirs of a person')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 5, 990000000)
-            .setQuantity(1),
+            .setQuantity(1)
+            .addSublines(['Special introduction by author', 'Something else from the author']),
           app.buildLineItem('memoirs_3', 'Their memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 15, 750000000)
-            .setQuantity(1),
+            .setQuantity(1)
+            .addSublines(
+              app.buildLineItem('memoirs_epilogue', 'Special memoir epilogue')
+                .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
+                .setQuantity(1)
+            ),
           app.buildLineItem('memoirs_4', 'Our memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 6, 490000000)
             .setQuantity(1)
@@ -108,7 +115,7 @@ exports.transactions = functions.https.onRequest((request, response) => {
           .setQuantity(1)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
       ])
-      .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 35);
+      .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 38, 990000000);
 
     // If in sandbox testing mode, do not require payment
     if (app.isInSandbox()) {
