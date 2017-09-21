@@ -40,7 +40,7 @@ developer account.
 1. To test payment when confirming transaction, uncheck the box in the Actions
 console simulator indicating testing in Sandbox mode.
 
-For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/samples/).
+For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/apiai/deploy-fulfillment).
 
 #### To use the Order Update module (`order-update.js`),
 
