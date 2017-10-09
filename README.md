@@ -16,7 +16,7 @@ comments in `index.js` demonstrating this behavior.
 
 ### Steps
 1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing.
-1. Click *Use API.AI* and then *Create Actions on API.AI*.
+1. Under *Build a custom app*, click *BUILD* in the Dialogflow box and then click *Create Actions on Dialogflow*.
 1. Click *Save* to save the project.
 1. Click on the gear icon to see the project settings.
 1. Select *Export and Import*.
@@ -24,9 +24,9 @@ comments in `index.js` demonstrating this behavior.
 1. Deploy the fulfillment webhook provided in the functions folder using [Google Cloud Functions for Firebase](https://firebase.google.com/docs/functions/):
    1. Follow the instructions to [set up and initialize Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/get-started#set_up_and_initialize_functions_sdk). Make sure to select the project that you have previously generated in the Actions on Google Console and to reply `N` when asked to overwrite existing files by the Firebase CLI.
    1. Run `firebase deploy --only functions` and take note of the endpoint where the fulfillment webhook has been published. It should look like `Function URL (transactions): https://${REGION}-${PROJECT}.cloudfunctions.net/transactions`
-1. Go back to the API.AI console and select *Fulfillment* from the left navigation menu.
+1. Go back to the Dialogflow console and select *Fulfillment* from the left navigation menu.
 1. Enable *Webhook*, set the value of *URL* to the `Function URL` from the previous step, then click *Save*.
-1. Open API.AI's *Integrations* page, open the *Settings* menu for *Actions on Google*, click *Authorize* if needed, then click *Update*.
+1. Open Dialogflow's *Integrations* page, open the *Settings* menu for *Actions on Google*, click *Authorize* if needed, then click *Update*.
 1. Click *Visit Console* to return to the Actions console, and set up your App info, including images, a
 contact email, and privacy policy. This information can all be edited before
 submitting for review.
@@ -40,7 +40,7 @@ developer account.
 1. To test payment when confirming transaction, uncheck the box in the Actions
 console simulator indicating testing in Sandbox mode.
 
-For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/apiai/deploy-fulfillment).
+For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/dialogflow/deploy-fulfillment).
 
 #### To use the Order Update module (`order-update.js`),
 

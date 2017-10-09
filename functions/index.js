@@ -14,10 +14,10 @@
 'use strict';
 
 process.env.DEBUG = 'actions-on-google:*';
-let ApiAiApp = require('actions-on-google').ApiAiApp;
+const { DialogflowApp } = require('actions-on-google');
 const functions = require('firebase-functions');
 
-// APIAI Actions
+// Dialogflow Actions
 const TRANSACTION_CHECK_NO_PAYMENT = 'transaction.check.no.payment';
 const TRANSACTION_CHECK_ACTION_PAYMENT = 'transaction.check.action';
 const TRANSACTION_CHECK_GOOGLE_PAYMENT = 'transaction.check.google';
@@ -28,7 +28,7 @@ const TRANSACTION_DECISION_ACTION_PAYMENT = 'transaction.decision.action';
 const TRANSACTION_DECISION_COMPLETE = 'transaction.decision.complete';
 
 exports.transactions = functions.https.onRequest((request, response) => {
-  const app = new ApiAiApp({ request, response });
+  const app = new DialogflowApp({ request, response });
   console.log('Request headers: ' + JSON.stringify(request.headers));
   console.log('Request body: ' + JSON.stringify(request.body));
 
