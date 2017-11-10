@@ -108,18 +108,18 @@ exports.transactions = functions.https.onRequest((request, response) => {
         ]).setNotes('The Memoir collection'))
       .addOtherItems([
         app.buildLineItem('subtotal', 'Subtotal')
-          .setType(app.Transactions.ItemType.SUBTOTAL)
+          .setType(app.Transactions.LineItemType.SUBTOTAL)
           .setQuantity(1)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 32, 220000000),
         app.buildLineItem('tax', 'Tax')
-          .setType(app.Transactions.ItemType.TAX)
+          .setType(app.Transactions.LineItemType.TAX)
           .setQuantity(1)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
       ])
       .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 38, 990000000);
 
     if (app.data.deliveryAddress) {
-      order.addLocation(app.Transactions.LocationType.DELIVERY, app.data.deliveryAddress);
+      order.addLocation(app.Transactions.OrderLocationType.DELIVERY, app.data.deliveryAddress);
     }
 
     // If in sandbox testing mode, do not require payment
@@ -154,7 +154,7 @@ exports.transactions = functions.https.onRequest((request, response) => {
   function transactionDecisionComplete (app) {
     if (app.getTransactionDecision() &&
       app.getTransactionDecision().userDecision ===
-        app.Transactions.ConfirmationDecision.ACCEPTED) {
+        app.Transactions.TransactionUserDecision.ACCEPTED) {
       let googleOrderId = app.getTransactionDecision().order.googleOrderId;
 
       // Confirm order and make any charges in order processing backend
