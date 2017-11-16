@@ -27,6 +27,8 @@ const DELIVERY_ADDRESS_COMPLETE = 'delivery.address.complete';
 const TRANSACTION_DECISION_ACTION_PAYMENT = 'transaction.decision.action';
 const TRANSACTION_DECISION_COMPLETE = 'transaction.decision.complete';
 
+const MILLISECONDS_TO_SECONDS_QUOTIENT = 1000;
+
 exports.transactions = functions.https.onRequest((request, response) => {
   const app = new DialogflowApp({ request, response });
   console.log('Request headers: ' + JSON.stringify(request.headers));
@@ -89,31 +91,34 @@ exports.transactions = functions.https.onRequest((request, response) => {
           app.buildLineItem('memoirs_1', 'My Memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
             .setQuantity(1)
-            .addSublines('Note from the author'),
+            .addSublines('Note from the author')
+            .setType(app.Transactions.LineItemType.REGULAR),
           app.buildLineItem('memoirs_2', 'Memoirs of a person')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 5, 990000000)
             .setQuantity(1)
-            .addSublines(['Special introduction by author', 'Something else from the author']),
+            .addSublines('Special introduction by author')
+            .setType(app.Transactions.LineItemType.REGULAR),
           app.buildLineItem('memoirs_3', 'Their memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 15, 750000000)
             .setQuantity(1)
+            .setType(app.Transactions.LineItemType.REGULAR)
             .addSublines(
               app.buildLineItem('memoirs_epilogue', 'Special memoir epilogue')
                 .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
                 .setQuantity(1)
+                .setType(app.Transactions.LineItemType.REGULAR)
             ),
           app.buildLineItem('memoirs_4', 'Our memoirs')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 6, 490000000)
             .setQuantity(1)
+            .setType(app.Transactions.LineItemType.REGULAR)
         ]).setNotes('The Memoir collection'))
       .addOtherItems([
         app.buildLineItem('subtotal', 'Subtotal')
           .setType(app.Transactions.LineItemType.SUBTOTAL)
-          .setQuantity(1)
-          .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 32, 220000000),
+          .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 36, 210000000),
         app.buildLineItem('tax', 'Tax')
           .setType(app.Transactions.LineItemType.TAX)
-          .setQuantity(1)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
       ])
       .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 38, 990000000);
@@ -122,40 +127,35 @@ exports.transactions = functions.https.onRequest((request, response) => {
       order.addLocation(app.Transactions.OrderLocationType.DELIVERY, app.data.deliveryAddress);
     }
 
-    // If in sandbox testing mode, do not require payment
-    if (app.isInSandbox()) {
-      app.askForTransactionDecision(order);
-    } else {
-      // To test this sample, uncheck the 'Testing in Sandbox Mode' box in the
-      // Actions console simulator
-      app.askForTransactionDecision(order, {
-        type: app.Transactions.PaymentType.PAYMENT_CARD,
-        displayName: 'VISA-1234',
-        deliveryAddressRequired: true
-      });
+    // To test payment w/ sample, uncheck the 'Testing in Sandbox Mode' box in the
+    // Actions console simulator
+    app.askForTransactionDecision(order, {
+      type: app.Transactions.PaymentType.PAYMENT_CARD,
+      displayName: 'VISA-1234',
+      deliveryAddressRequired: true
+    });
 
-      /*
-        // If using Google provided payment instrument instead
-        app.askForTransactionDecision(order, {
-          // These will be provided by payment processor, like Stripe,
-          // Braintree, or Vantiv
-          tokenizationParameters: {},
-          cardNetworks: [
-            app.Transactions.CardNetwork.VISA,
-            app.Transactions.CardNetwork.AMEX
-          ],
-          prepaidCardDisallowed: false,
-          deliveryAddressRequired: false
-        });
-      */
-    }
+    /*
+      // If using Google provided payment instrument instead
+      app.askForTransactionDecision(order, {
+        // These will be provided by payment processor, like Stripe,
+        // Braintree, or Vantiv
+        tokenizationParameters: {},
+        cardNetworks: [
+          app.Transactions.CardNetwork.VISA,
+          app.Transactions.CardNetwork.AMEX
+        ],
+        prepaidCardDisallowed: false,
+        deliveryAddressRequired: false
+      });
+    */
   }
 
   function transactionDecisionComplete (app) {
     if (app.getTransactionDecision() &&
       app.getTransactionDecision().userDecision ===
         app.Transactions.TransactionUserDecision.ACCEPTED) {
-      let googleOrderId = app.getTransactionDecision().order.googleOrderId;
+      let finalOrderId = app.getTransactionDecision().order.finalOrder.id;
 
       // Confirm order and make any charges in order processing backend
       // If using Google provided payment instrument:
@@ -163,11 +163,15 @@ exports.transactions = functions.https.onRequest((request, response) => {
       //   .googleProvidedPaymentInstrument.instrumentToken;
 
       app.tell(app.buildRichResponse().addOrderUpdate(
-        app.buildOrderUpdate(googleOrderId, true)
+        app.buildOrderUpdate(finalOrderId, false)
           .setOrderState(app.Transactions.OrderState.CREATED, 'Order created')
+          .setUpdateTime(Math.floor(Date.now() / MILLISECONDS_TO_SECONDS_QUOTIENT))
           .setInfo(app.Transactions.OrderStateInfo.RECEIPT, {
             confirmedActionOrderId: '<UNIQUE_ORDER_ID>'
-          }))
+          })
+          // Replace the URL with your own customer service page
+          .addOrderManagementAction(app.Transactions.ActionType.CUSTOMER_SERVICE,
+            'Customer Service', 'http://example.com/customer-service'))
         .addSimpleResponse('Transaction completed! You\'re all set!'));
     } else if (app.getTransactionDecision() &&
       app.getTransactionDecision().userDecision ===

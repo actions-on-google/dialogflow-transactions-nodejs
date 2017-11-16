@@ -36,11 +36,48 @@ submitting for review.
 1. In the left panel, click *Simulator*.
 1. Type `Talk to my test app` in the simulator, or say `OK Google, talk to my test app` to any Actions on Google enabled device signed into your
 developer account.
-1. Follow the instructions from the app to test transactions.
+1. Follow the instructions below to test a transaction.
 1. To test payment when confirming transaction, uncheck the box in the Actions
 console simulator indicating testing in Sandbox mode.
 
 For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/dialogflow/deploy-fulfillment).
+
+#### To test a transaction
+
+1. Determine a unique Order ID for the transaction you want to test, and
+replace the `<UNIQUE_ORDER_ID>` in the `transactionDecision()` and
+`transactionDecisionComplete()` methods. You may
+need to change this and redeploy your webhook each time you want to test a transaction
+confirmation.
+1. Determine the [payment method](https://developers.google.com/actions/transactions/dev-guide#choose_a_payment_method)
+you wish to accept in the app. The app uses action provided payment by default.
+If you want to use a Google-provided payment instrument, uncomment the annotated
+code in `transactionDecision()` and `transactionDecisionComplete()` in `index.js`.
+1. It must be confirmed that the [user can transact](https://developers.google.com/actions/transactions/dev-guide#check_for_transaction_requirements).
+To check this, say/type either
+      * `check transaction without payment` - to check requirements for a transaction without payment.
+      * `check transaction with Google payment` - to check requirements for a transaction where
+      the user pays with an Google-provided payment instrument stored under their account.
+      * `check transaction with action payment` - to check requirements for a transaction where
+      the user will pay with a payment instrument that you are providing.
+1. (Optional) The user's delivery address can then be acquired by saying/typing
+`get delivery address`. This will present the user with a flow to select from
+an available delivery address.
+5. To confirm the transaction, simply say/type `confirm transaction`. Here, the
+`transactionDecision()` method will be called in `index.js`.
+6. You should see a transaction receipt, and a final confirmation of the order.
+
+#### Troubleshooting
+
+If the app isn't working, try the following:
+* Make sure your Actions console project has filled App Information section,
+including name, images, email address, etc. This is required for testing transactions.
+After changing this, you may need to re-enable testing in the Actions console.
+* Make sure your Actions console project indicates that it is using Transactions
+using the checkbox at the bottom of App Information
+* Make sure you've replaced the `<UNIQUE_ORDER_ID>` in `index.js`,  and replace it
+each time you test the app.
+* The full transactions flow may only be testable on a phone.
 
 #### To use the Order Update module (`order-update.js`),
 
