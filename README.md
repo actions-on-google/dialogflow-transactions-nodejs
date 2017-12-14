@@ -83,6 +83,8 @@ each time you test the app.
 
 1. Visit the [Google Cloud console](https://console.cloud.google.com/)
 for the project used in the [Actions console](https://console.actions.google.com).
+1. Navigate to the API Library.
+1. Search for and enable the Google Actions API.
 1. Navigate to the Credentials page in the API manager. You may need to enable access.
 1. Click Create credentials > Service Account Key
 1. Click the Select box under Service Account and click New Service Account

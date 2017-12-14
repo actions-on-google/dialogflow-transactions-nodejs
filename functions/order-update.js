@@ -54,7 +54,9 @@ jwtClient.authorize(function (err, tokens) {
     body: {
       'custom_push_message': {
         'order_update': orderUpdate
-      }
+      },
+      // Comment out for non-sandbox transactions
+      'is_in_sandbox': true
     },
     json: true
   };
