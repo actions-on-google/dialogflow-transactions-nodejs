@@ -75,8 +75,8 @@ exports.transactions = functions.https.onRequest((request, response) => {
 
   function deliveryAddressComplete (app) {
     if (app.getDeliveryAddress()) {
-      console.log('DELIVERY ADDRESS: '
-        + app.getDeliveryAddress().postalAddress.addressLines[0]);
+      console.log('DELIVERY ADDRESS: ' +
+        app.getDeliveryAddress().postalAddress.addressLines[0]);
       app.data.deliveryAddress = app.getDeliveryAddress();
       app.ask('Great, got your address! Now say "confirm transaction".');
     } else {
@@ -85,7 +85,7 @@ exports.transactions = functions.https.onRequest((request, response) => {
   }
 
   function transactionDecision (app) {
-    let order = app.buildOrder('<UNIQUE_ORDER_ID>')
+    const order = app.buildOrder('<UNIQUE_ORDER_ID>')
       .setCart(app.buildCart().setMerchant('book_store_1', 'Book Store')
         .addLineItems([
           app.buildLineItem('memoirs_1', 'My Memoirs')
@@ -155,12 +155,11 @@ exports.transactions = functions.https.onRequest((request, response) => {
     if (app.getTransactionDecision() &&
       app.getTransactionDecision().userDecision ===
         app.Transactions.TransactionUserDecision.ACCEPTED) {
-      let finalOrderId = app.getTransactionDecision().order.finalOrder.id;
+      const finalOrderId = app.getTransactionDecision().order.finalOrder.id;
 
       // Confirm order and make any charges in order processing backend
       // If using Google provided payment instrument:
-      // let paymentToken = app.getTransactionDecision().order.paymentInfo
-      //   .googleProvidedPaymentInstrument.instrumentToken;
+      // const paymentDisplayName = app.getTransactionDecision().order.paymentInfo.displayName;
 
       app.tell(app.buildRichResponse().addOrderUpdate(
         app.buildOrderUpdate(finalOrderId, false)
