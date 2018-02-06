@@ -88,36 +88,36 @@ exports.transactions = functions.https.onRequest((request, response) => {
     const order = app.buildOrder('<UNIQUE_ORDER_ID>')
       .setCart(app.buildCart().setMerchant('book_store_1', 'Book Store')
         .addLineItems([
-          app.buildLineItem('memoirs_1', 'My Memoirs')
+          app.buildLineItem('My Memoirs', 'memoirs_1')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
             .setQuantity(1)
             .addSublines('Note from the author')
             .setType(app.Transactions.LineItemType.REGULAR),
-          app.buildLineItem('memoirs_2', 'Memoirs of a person')
+          app.buildLineItem('Memoirs of a person', 'memoirs_2')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 5, 990000000)
             .setQuantity(1)
             .addSublines('Special introduction by author')
             .setType(app.Transactions.LineItemType.REGULAR),
-          app.buildLineItem('memoirs_3', 'Their memoirs')
+          app.buildLineItem('Their memoirs', 'memoirs_3')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 15, 750000000)
             .setQuantity(1)
             .setType(app.Transactions.LineItemType.REGULAR)
             .addSublines(
-              app.buildLineItem('memoirs_epilogue', 'Special memoir epilogue')
+              app.buildLineItem('Special memoir epilogue', 'memoirs_epilogue')
                 .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
                 .setQuantity(1)
                 .setType(app.Transactions.LineItemType.REGULAR)
             ),
-          app.buildLineItem('memoirs_4', 'Our memoirs')
+          app.buildLineItem('Our memoirs', 'memoirs_4')
             .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 6, 490000000)
             .setQuantity(1)
             .setType(app.Transactions.LineItemType.REGULAR)
         ]).setNotes('The Memoir collection'))
       .addOtherItems([
-        app.buildLineItem('subtotal', 'Subtotal')
+        app.buildLineItem('Subtotal', 'subtotal')
           .setType(app.Transactions.LineItemType.SUBTOTAL)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 36, 210000000),
-        app.buildLineItem('tax', 'Tax')
+        app.buildLineItem('Tax', 'tax')
           .setType(app.Transactions.LineItemType.TAX)
           .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
       ])
