@@ -25,7 +25,7 @@ let jwtClient = new google.auth.JWT(
   null
 );
 
-jwtClient.authorize(function (err, tokens) {
+jwtClient.authorize((err, tokens) => {
   if (err) {
     console.log(err);
     return;
@@ -60,7 +60,7 @@ jwtClient.authorize(function (err, tokens) {
     },
     json: true
   };
-  request.post(options, function (err, httpResponse, body) {
+  request.post(options, (err, httpResponse, body) => {
     if (err) {
       console.log(err);
       return;
