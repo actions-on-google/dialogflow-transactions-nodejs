@@ -17,6 +17,7 @@ comments in `index.js` demonstrating this behavior.
 ### Steps
 1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing.
 1. Under *Build a custom app*, click *BUILD* in the Dialogflow box and then click *Create Actions on Dialogflow*.
+1. Disable the Dialogflow V2 API under the *API Version* section. This sample uses Dialogflow V1 API.
 1. Click *Save* to save the project.
 1. Click on the gear icon to see the project settings.
 1. Select *Export and Import*.
@@ -45,14 +46,14 @@ For more detailed information on deployment, see the [documentation](https://dev
 #### To test a transaction
 
 1. Determine a unique Order ID for the transaction you want to test, and
-replace the `<UNIQUE_ORDER_ID>` in the `transactionDecision()` and
-`transactionDecisionComplete()` methods. You may
+replace the `<UNIQUE_ORDER_ID>` in the `transaction_decision_action` and
+`transaction_decision_complete` intent handlers. You may
 need to change this and redeploy your webhook each time you want to test a transaction
 confirmation.
 1. Determine the [payment method](https://developers.google.com/actions/transactions/dev-guide#choose_a_payment_method)
 you wish to accept in the app. The app uses action provided payment by default.
 If you want to use a Google-provided payment instrument, uncomment the annotated
-code in `transactionDecision()` and `transactionDecisionComplete()` in `index.js`.
+code in the `transaction_decision_action` and `transaction_decision_complete` intent handlers in `index.js`.
 1. It must be confirmed that the [user can transact](https://developers.google.com/actions/transactions/dev-guide#check_for_transaction_requirements).
 To check this, say/type either
       * `check transaction without payment` - to check requirements for a transaction without payment.
@@ -64,7 +65,7 @@ To check this, say/type either
 `get delivery address`. This will present the user with a flow to select from
 an available delivery address.
 5. To confirm the transaction, simply say/type `confirm transaction`. Here, the
-`transactionDecision()` method will be called in `index.js`.
+`transaction_decision_action` intent will be handled in `index.js`.
 6. You should see a transaction receipt, and a final confirmation of the order.
 
 #### Troubleshooting
@@ -83,7 +84,7 @@ each time you test the app.
 
 1. Visit the [Google Cloud console](https://console.cloud.google.com/)
 for the project used in the [Actions console](https://console.actions.google.com).
-1. Navigate to the API Library.
+1. Navigate to the [API Library](https://console.cloud.google.com/apis/library).
 1. Search for and enable the Google Actions API.
 1. Navigate to the Credentials page in the API manager. You may need to enable access.
 1. Click Create credentials > Service Account Key

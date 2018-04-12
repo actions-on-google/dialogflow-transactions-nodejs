@@ -13,8 +13,7 @@
 
 const google = require('googleapis');
 const request = require('request');
-const Transactions = require('actions-on-google').Transactions.TransactionValues;
-const OrderUpdate = require('actions-on-google').Transactions.OrderUpdate;
+const {OrderUpdate} = require('actions-on-google');
 const key = require('./path/to/key.json');
 
 let jwtClient = new google.auth.JWT(
@@ -31,7 +30,7 @@ jwtClient.authorize((err, tokens) => {
     return;
   }
 
-  const currentTime = Math.ceil(Date.now() / 1000);
+  const currentTime = new Date().toISOString();
 
   // ID of the order to update
   let actionOrderId = '<UNIQUE_ORDER_ID>';
@@ -39,26 +38,30 @@ jwtClient.authorize((err, tokens) => {
   /* CANCELLED, FULFILLED, REJECTED, or RETURNED
    are the states that we notify via push, and only once per state change */
 
-  let orderUpdate = new OrderUpdate(actionOrderId, false)
-    .setOrderState(Transactions.OrderState.FULFILLED,
-      'Order has been delivered!')
-    .setUpdateTime(currentTime);
+  let orderUpdate = new OrderUpdate({
+    actionOrderId: actionOrderId,
+    orderState: {
+      label: 'Order has been delivered!',
+      state: 'FULFILLED',
+    },
+    updateTime: currentTime,
+  });
 
   let bearer = 'Bearer ' + tokens.access_token;
   let options = {
     method: 'POST',
     url: 'https://actions.googleapis.com/v2/conversations:send',
     headers: {
-      'Authorization': bearer
+      'Authorization': bearer,
     },
     body: {
-      'custom_push_message': {
-        'order_update': orderUpdate
+      custom_push_message: {
+        order_update: orderUpdate,
       },
       // Comment out for non-sandbox transactions
-      'is_in_sandbox': true
+      is_in_sandbox: true,
     },
-    json: true
+    json: true,
   };
   request.post(options, (err, httpResponse, body) => {
     if (err) {

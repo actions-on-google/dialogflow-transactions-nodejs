@@ -14,182 +14,324 @@
 'use strict';
 
 process.env.DEBUG = 'actions-on-google:*';
-const { DialogflowApp } = require('actions-on-google');
+const {
+  dialogflow,
+  DeliveryAddress,
+  OrderUpdate,
+  TransactionDecision,
+  TransactionRequirements,
+} = require('actions-on-google');
 const functions = require('firebase-functions');
 
-// Dialogflow Actions
-const TRANSACTION_CHECK_NO_PAYMENT = 'transaction.check.no.payment';
-const TRANSACTION_CHECK_ACTION_PAYMENT = 'transaction.check.action';
-const TRANSACTION_CHECK_GOOGLE_PAYMENT = 'transaction.check.google';
-const TRANSACTION_CHECK_COMPLETE = 'transaction.check.complete';
-const DELIVERY_ADDRESS = 'delivery.address';
-const DELIVERY_ADDRESS_COMPLETE = 'delivery.address.complete';
-const TRANSACTION_DECISION_ACTION_PAYMENT = 'transaction.decision.action';
-const TRANSACTION_DECISION_COMPLETE = 'transaction.decision.complete';
+const app = dialogflow({debug: true});
 
-const MILLISECONDS_TO_SECONDS_QUOTIENT = 1000;
+const GENERIC_EXTENSION_TYPE =
+  'type.googleapis.com/google.actions.v2.orders.GenericExtension';
+const UNIQUE_ORDER_ID = '<UNIQUE_ORDER_ID>';
 
-exports.transactions = functions.https.onRequest((request, response) => {
-  const app = new DialogflowApp({ request, response });
-  console.log('Request headers: ' + JSON.stringify(request.headers));
-  console.log('Request body: ' + JSON.stringify(request.body));
-
-  function transactionCheckNoPayment (app) {
-    app.askForTransactionRequirements();
-  }
-
-  function transactionCheckActionPayment (app) {
-    app.askForTransactionRequirements({
-      type: app.Transactions.PaymentType.PAYMENT_CARD,
-      displayName: 'VISA-1234',
-      deliveryAddressRequired: false
-    });
-  }
-
-  function transactionCheckGooglePayment (app) {
-    app.askForTransactionRequirements({
-      // These will be provided by payment processor, like Stripe, Braintree, or
-      // Vantiv
-      tokenizationParameters: {},
-      cardNetworks: [
-        app.Transactions.CardNetwork.VISA,
-        app.Transactions.CardNetwork.AMEX
-      ],
-      prepaidCardDisallowed: false,
-      deliveryAddressRequired: false
-    });
-  }
-
-  function transactionCheckComplete (app) {
-    if (app.getTransactionRequirementsResult() === app.Transactions.ResultType.OK) {
-      // Normally take the user through cart building flow
-      app.ask('Looks like you\'re good to go! Try saying "Get Delivery Address".');
-    } else {
-      app.tell('Transaction failed.');
-    }
-  }
-
-  function deliveryAddress (app) {
-    app.askForDeliveryAddress('To know where to send the order');
-  }
-
-  function deliveryAddressComplete (app) {
-    if (app.getDeliveryAddress()) {
-      console.log('DELIVERY ADDRESS: ' +
-        app.getDeliveryAddress().postalAddress.addressLines[0]);
-      app.data.deliveryAddress = app.getDeliveryAddress();
-      app.ask('Great, got your address! Now say "confirm transaction".');
-    } else {
-      app.tell('Transaction failed.');
-    }
-  }
-
-  function transactionDecision (app) {
-    const order = app.buildOrder('<UNIQUE_ORDER_ID>')
-      .setCart(app.buildCart().setMerchant('book_store_1', 'Book Store')
-        .addLineItems([
-          app.buildLineItem('My Memoirs', 'memoirs_1')
-            .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
-            .setQuantity(1)
-            .addSublines('Note from the author')
-            .setType(app.Transactions.LineItemType.REGULAR),
-          app.buildLineItem('Memoirs of a person', 'memoirs_2')
-            .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 5, 990000000)
-            .setQuantity(1)
-            .addSublines('Special introduction by author')
-            .setType(app.Transactions.LineItemType.REGULAR),
-          app.buildLineItem('Their memoirs', 'memoirs_3')
-            .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 15, 750000000)
-            .setQuantity(1)
-            .setType(app.Transactions.LineItemType.REGULAR)
-            .addSublines(
-              app.buildLineItem('Special memoir epilogue', 'memoirs_epilogue')
-                .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 3, 990000000)
-                .setQuantity(1)
-                .setType(app.Transactions.LineItemType.REGULAR)
-            ),
-          app.buildLineItem('Our memoirs', 'memoirs_4')
-            .setPrice(app.Transactions.PriceType.ACTUAL, 'USD', 6, 490000000)
-            .setQuantity(1)
-            .setType(app.Transactions.LineItemType.REGULAR)
-        ]).setNotes('The Memoir collection'))
-      .addOtherItems([
-        app.buildLineItem('Subtotal', 'subtotal')
-          .setType(app.Transactions.LineItemType.SUBTOTAL)
-          .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 36, 210000000),
-        app.buildLineItem('Tax', 'tax')
-          .setType(app.Transactions.LineItemType.TAX)
-          .setPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 2, 780000000)
-      ])
-      .setTotalPrice(app.Transactions.PriceType.ESTIMATE, 'USD', 38, 990000000);
-
-    if (app.data.deliveryAddress) {
-      order.addLocation(app.Transactions.OrderLocationType.DELIVERY, app.data.deliveryAddress);
-    }
-
-    // To test payment w/ sample, uncheck the 'Testing in Sandbox Mode' box in the
-    // Actions console simulator
-    app.askForTransactionDecision(order, {
-      type: app.Transactions.PaymentType.PAYMENT_CARD,
-      displayName: 'VISA-1234',
-      deliveryAddressRequired: true
-    });
-
-    /*
-      // If using Google provided payment instrument instead
-      app.askForTransactionDecision(order, {
-        // These will be provided by payment processor, like Stripe,
-        // Braintree, or Vantiv
-        tokenizationParameters: {},
-        cardNetworks: [
-          app.Transactions.CardNetwork.VISA,
-          app.Transactions.CardNetwork.AMEX
-        ],
-        prepaidCardDisallowed: false,
-        deliveryAddressRequired: false
-      });
-    */
-  }
-
-  function transactionDecisionComplete (app) {
-    if (app.getTransactionDecision() &&
-      app.getTransactionDecision().userDecision ===
-        app.Transactions.TransactionUserDecision.ACCEPTED) {
-      const finalOrderId = app.getTransactionDecision().order.finalOrder.id;
-
-      // Confirm order and make any charges in order processing backend
-      // If using Google provided payment instrument:
-      // const paymentDisplayName = app.getTransactionDecision().order.paymentInfo.displayName;
-
-      app.tell(app.buildRichResponse().addOrderUpdate(
-        app.buildOrderUpdate(finalOrderId, false)
-          .setOrderState(app.Transactions.OrderState.CREATED, 'Order created')
-          .setUpdateTime(Math.floor(Date.now() / MILLISECONDS_TO_SECONDS_QUOTIENT))
-          .setInfo(app.Transactions.OrderStateInfo.RECEIPT, {
-            confirmedActionOrderId: '<UNIQUE_ORDER_ID>'
-          })
-          // Replace the URL with your own customer service page
-          .addOrderManagementAction(app.Transactions.ActionType.CUSTOMER_SERVICE,
-            'Customer Service', 'http://example.com/customer-service'))
-        .addSimpleResponse('Transaction completed! You\'re all set!'));
-    } else if (app.getTransactionDecision() &&
-      app.getTransactionDecision().userDecision ===
-        app.Transactions.ConfirmationDecision.DELIVERY_ADDRESS_UPDATED) {
-      return deliveryAddress(app);
-    } else {
-      app.tell('Transaction failed.');
-    }
-  }
-
-  const actionMap = new Map();
-  actionMap.set(TRANSACTION_CHECK_NO_PAYMENT, transactionCheckNoPayment);
-  actionMap.set(TRANSACTION_CHECK_ACTION_PAYMENT, transactionCheckActionPayment);
-  actionMap.set(TRANSACTION_CHECK_GOOGLE_PAYMENT, transactionCheckGooglePayment);
-  actionMap.set(TRANSACTION_CHECK_COMPLETE, transactionCheckComplete);
-  actionMap.set(DELIVERY_ADDRESS, deliveryAddress);
-  actionMap.set(DELIVERY_ADDRESS_COMPLETE, deliveryAddressComplete);
-  actionMap.set(TRANSACTION_DECISION_ACTION_PAYMENT, transactionDecision);
-  actionMap.set(TRANSACTION_DECISION_COMPLETE, transactionDecisionComplete);
-
-  app.handleRequest(actionMap);
+app.intent('transaction_check_nopayment', (conv) => {
+  conv.ask(new TransactionRequirements());
 });
+
+app.intent('transaction_check_action', (conv) => {
+  conv.ask(new TransactionRequirements({
+    orderOptions: {
+      requestDeliveryAddress: false,
+    },
+    paymentOptions: {
+      actionProvidedOptions: {
+        displayName: 'VISA-1234',
+        paymentType: 'PAYMENT_CARD',
+      },
+    },
+  }));
+});
+
+app.intent('transaction_check_google', (conv) => {
+  conv.ask(new TransactionRequirements({
+    orderOptions: {
+      requestDeliveryAddress: false,
+    },
+    paymentOptions: {
+      googleProvidedOptions: {
+        prepaidCardDisallowed: false,
+        supportedCardNetworks: ['VISA', 'AMEX'],
+        // These will be provided by payment processor,
+        // like Stripe, Braintree, or Vantiv.
+        tokenizationParameters: {},
+      },
+    },
+  }));
+});
+
+app.intent('transaction_check_complete', (conv) => {
+  const arg = conv.arguments.get('TRANSACTION_REQUIREMENTS_CHECK_RESULT');
+  if (arg && arg.resultType ==='OK') {
+    // Normally take the user through cart building flow
+    conv.ask(`Looks like you're good to go! ` +
+      `Try saying "Get Delivery Address".`);
+  } else {
+    conv.close('Transaction failed.');
+  }
+});
+
+app.intent('delivery_address', (conv) => {
+  conv.ask(new DeliveryAddress({
+    addressOptions: {
+      reason: 'To know where to send the order',
+    },
+  }));
+});
+
+app.intent('delivery_address_complete', (conv) => {
+  const arg = conv.arguments.get('DELIVERY_ADDRESS_VALUE');
+  if (arg.userDecision ==='ACCEPTED') {
+    console.log('DELIVERY ADDRESS: ' +
+    arg.location.postalAddress.addressLines[0]);
+    conv.data.deliveryAddress = arg.location;
+    conv.ask('Great, got your address! Now say "confirm transaction".');
+  } else {
+    conv.close('I failed to get your delivery address.');
+  }
+});
+
+app.intent('transaction_decision_action', (conv) => {
+  const order = {
+    id: UNIQUE_ORDER_ID,
+    cart: {
+      merchant: {
+        id: 'book_store_1',
+        name: 'Book Store',
+      },
+      lineItems: [
+        {
+          name: 'My Memoirs',
+          id: 'memoirs_1',
+          price: {
+            amount: {
+              currencyCode: 'USD',
+              nanos: 990000000,
+              units: 3,
+            },
+            type: 'ACTUAL',
+          },
+          quantity: 1,
+          subLines: [
+            {
+              note: 'Note from the author',
+            },
+          ],
+          type: 'REGULAR',
+        },
+        {
+          name: 'Memoirs of a person',
+          id: 'memoirs_2',
+          price: {
+            amount: {
+              currencyCode: 'USD',
+              nanos: 990000000,
+              units: 5,
+            },
+            type: 'ACTUAL',
+          },
+          quantity: 1,
+          subLines: [
+            {
+              note: 'Special introduction by author',
+            },
+          ],
+          type: 'REGULAR',
+        },
+        {
+          name: 'Their memoirs',
+          id: 'memoirs_3',
+          price: {
+            amount: {
+              currencyCode: 'USD',
+              nanos: 750000000,
+              units: 15,
+            },
+            type: 'ACTUAL',
+          },
+          quantity: 1,
+          subLines: [
+            {
+              lineItem: {
+                name: 'Special memoir epilogue',
+                id: 'memoirs_epilogue',
+                price: {
+                  amount: {
+                    currencyCode: 'USD',
+                    nanos: 990000000,
+                    units: 3,
+                  },
+                  type: 'ACTUAL',
+                },
+                quantity: 1,
+                type: 'REGULAR',
+              },
+            },
+          ],
+          type: 'REGULAR',
+        },
+        {
+          name: 'Our memoirs',
+          id: 'memoirs_4',
+          price: {
+            amount: {
+              currencyCode: 'USD',
+              nanos: 490000000,
+              units: 6,
+            },
+            type: 'ACTUAL',
+          },
+          quantity: 1,
+          subLines: [
+            {
+              note: 'Special introduction by author',
+            },
+          ],
+          type: 'REGULAR',
+        },
+      ],
+      notes: 'The Memoir collection',
+      otherItems: [
+        {
+          name: 'Subtotal',
+          id: 'subtotal',
+          price: {
+            amount: {
+              currencyCode: 'USD',
+              nanos: 220000000,
+              units: 32,
+            },
+            type: 'ESTIMATE',
+          },
+          type: 'SUBTOTAL',
+        },
+        {
+          name: 'Tax',
+          id: 'tax',
+          price: {
+            amount: {
+              currencyCode: 'USD',
+              nanos: 780000000,
+              units: 2,
+            },
+            type: 'ESTIMATE',
+          },
+          type: 'TAX',
+        },
+      ],
+    },
+    otherItems: [],
+    totalPrice: {
+      amount: {
+        currencyCode: 'USD',
+        nanos: 0,
+        units: 35,
+      },
+      type: 'ESTIMATE',
+    },
+  };
+
+  if (conv.data.deliveryAddress) {
+    order.extension = {
+      '@type': GENERIC_EXTENSION_TYPE,
+      'locations': [
+        {
+          type: 'DELIVERY',
+          location: {
+            postalAddress: conv.data.deliveryAddress.postalAddress,
+          },
+        },
+      ],
+    };
+  }
+
+  // To test payment w/ sample,
+  // uncheck the 'Testing in Sandbox Mode' box in the
+  // Actions console simulator
+  conv.ask(new TransactionDecision({
+    orderOptions: {
+      requestDeliveryAddress: true,
+    },
+    paymentOptions: {
+      actionProvidedOptions: {
+        paymentType: 'PAYMENT_CARD',
+        displayName: 'VISA-1234',
+      },
+    },
+    proposedOrder: order,
+  }));
+
+  /*
+    // If using Google provided payment instrument instead
+    conv.ask(new TransactionDecision({
+    orderOptions: {
+      requestDeliveryAddress: false,
+    },
+    paymentOptions: {
+      googleProvidedOptions: {
+        prepaidCardDisallowed: false,
+        supportedCardNetworks: ['VISA', 'AMEX'],
+        // These will be provided by payment processor,
+        // like Stripe, Braintree, or Vantiv.
+        tokenizationParameters: {},
+      },
+    },
+    proposedOrder: order,
+  }));
+  */
+});
+
+app.intent('transaction_decision_complete', (conv) => {
+  console.log('Transaction decision complete');
+  const arg = conv.arguments.get('TRANSACTION_DECISION_VALUE');
+  if (arg && arg.userDecision ==='ORDER_ACCEPTED') {
+    const finalOrderId = arg.order.finalOrder.id;
+
+    // Confirm order and make any charges in order processing backend
+    // If using Google provided payment instrument:
+    // const paymentDisplayName = arg.order.paymentInfo.displayName;
+    conv.ask(new OrderUpdate({
+      actionOrderId: finalOrderId,
+      orderState: {
+        label: 'Order created',
+        state: 'CREATED',
+      },
+      lineItemUpdates: {},
+      updateTime: new Date().toISOString(),
+      receipt: {
+        confirmedActionOrderId: UNIQUE_ORDER_ID,
+      },
+      // Replace the URL with your own customer service page
+      orderManagementActions: [
+        {
+          button: {
+            openUrlAction: {
+              url: 'http://example.com/customer-service',
+            },
+            title: 'Customer Service',
+          },
+          type: 'CUSTOMER_SERVICE',
+        },
+      ],
+      userNotification: {
+        text: 'Notification text.',
+        title: 'Notification Title',
+      },
+    }));
+    conv.ask(`Transaction completed! You're all set!`);
+  } else if (arg && arg.userDecision === 'DELIVERY_ADDRESS_UPDATED') {
+    conv.ask(new DeliveryAddress({
+      addressOptions: {
+        reason: 'To know where to send the order',
+      },
+    }));
+  } else {
+    conv.close('Transaction failed.');
+  }
+});
+
+exports.transactions = functions.https.onRequest(app);
