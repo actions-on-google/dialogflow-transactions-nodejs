@@ -1,115 +1,96 @@
-# Actions on Google: Transactions Sample using Node.js
+# Actions on Google: Node.jsを使ったトランザクションのサンプル
 
-This sample shows everything you need to facilitate transactions for your app.
-It includes the main checkout flows, including checking for transaction
-requirements, getting the user's delivery address, and confirming the
-transaction. There is also an order update module (`order-update.js`) that can
-be used to asynchronously update order status at any time.
+このサンプルは、あなたのアプリにてトランザクションを容易にするために必要なものすべてを示しています。
+これには、トランザクション要件のチェック、ユーザーの配送先住所の取得、トランザクションの確認など、
+メインのチェックアウトフローが含まれます。また、いつでも注文状況を非同期的にアップデートするために
+使用できる注文アップデートモジュール（ `order-update.js` ）もあります。
 
-This sample provides examples of transaction payment configurations for
-action provided payments and transactions without payment, but the Actions on
-Google library also offers functionality for Google provided payment by
-providing tokenization parameters from your payment processor. There are
-comments in `index.js` demonstrating this behavior.
+このサンプルは、決済を提供するアクションと、決済のないトランザクションの決済設定の例を提供しますが、
+Actions on Googleのライブラリは、あなたの決済処理からトークナイゼーションパラメータを提供する、
+Googleにより提供される決済のための機能も提供しています。この振る舞いをデモンストレーションする
+`index.js` のコメントもあります。
 
-## Setup Instructions
+## セットアップの方法
 
-### Steps
-1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing.
-1. Under *Build a custom app*, click *BUILD* in the Dialogflow box and then click *Create Actions on Dialogflow*.
-1. Disable the Dialogflow V2 API under the *API Version* section. This sample uses Dialogflow V1 API.
-1. Click *Save* to save the project.
-1. Click on the gear icon to see the project settings.
-1. Select *Export and Import*.
-1. Select *Restore from zip*. Follow the directions to restore from the Transactions.zip file in this repo.
-1. Deploy the fulfillment webhook provided in the functions folder using [Google Cloud Functions for Firebase](https://firebase.google.com/docs/functions/):
-   1. Follow the instructions to [set up and initialize Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/get-started#set_up_and_initialize_functions_sdk). Make sure to select the project that you have previously generated in the Actions on Google Console and to reply `N` when asked to overwrite existing files by the Firebase CLI.
-   1. Run `firebase deploy --only functions` and take note of the endpoint where the fulfillment webhook has been published. It should look like `Function URL (transactions): https://${REGION}-${PROJECT}.cloudfunctions.net/transactions`
-1. Go back to the Dialogflow console and select *Fulfillment* from the left navigation menu.
-1. Enable *Webhook*, set the value of *URL* to the `Function URL` from the previous step, then click *Save*.
-1. Open Dialogflow's *Integrations* page, open the *Settings* menu for *Actions on Google*, click *Authorize* if needed, then click *Update*.
-1. Click *Visit Console* to return to the Actions console, and set up your App info, including images, a
-contact email, and privacy policy. This information can all be edited before
-submitting for review.
-1. Check the box at the bottom to indicate this app uses Transactions.
-1. Set up a payment method for your account in the Google Assistant settings on your phone if you haven't set one up already.
-1. Return to your App overview, and hit *Test*.
-1. In the left panel, click *Simulator*.
-1. Type `Talk to my test app` in the simulator, or say `OK Google, talk to my test app` to any Actions on Google enabled device signed into your
-developer account.
-1. Follow the instructions below to test a transaction.
-1. To test payment when confirming transaction, uncheck the box in the Actions
-console simulator indicating testing in Sandbox mode.
+### 手順
 
-For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/dialogflow/deploy-fulfillment).
+1. [Actions on Google Console](https://console.actions.google.com) を使用して、あなたが選択した名前で新しいプロジェクトを追加します。
+1. *Build a custom app* にて、Dialogflowの四角の中にある *BUILD* をクリックし、その後 *Create Actions on Dialogflow* をクリックします。
+1. *API Version* セクション内の Dialogflow V2 API を無効にします。このサンプルでは、Dialogflow V1 APIを使います。
+1. *Save* をクリックして、プロジェクトを保存します。
+1. ギアアイコンをクリックして、プロジェクト設定を表示します。
+1. *Export and Import* を選択します。
+1. *Restore from zip* を選択します。このリポジトリにある Transactions.zip からリストアするための指示に従います。
+1. [Google Cloud Functions for Firebase](https://firebase.google.com/docs/functions/) を使って、functions フォルダ内で提供されるフルフィルメントWebhookをデプロイします。
+   1. [set up and initialize Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/get-started#set_up_and_initialize_functions_sdk) の指示に従います。前の手順で Actions on Google Console で作成したプロジェクトを選択することを確認し、そして Firebase CLI にて既存ファイルの上書きを尋ねられた際には `N` と返事してください。
+   1. `firebase deploy --only functions` を実行します。そして、フルフィルメントWebhookが公開されたエンドポイントをメモしておきます。それは、 `Function URL (transactions): https://${REGION}-${PROJECT}.cloudfunctions.net/transactions` のように表示されるはずです。
+1. Dialogflowコンソールに戻り、ナビゲーションメニューから *Fulfillment* を選択します。
+1. *Webhook* を有効にして、前の手順からの `Function URL` を *URL* の値としてセットします。その後、 *Save* をクリックします。
+1. Dialogflowの *Integrations* ページを開き、 *Actions on Google* の *Settings* メニューを開きます。必要であれば、 *Authorize* をクリックします。その後、 *Update* をクリックします。
+1. Actionsコンソールに戻るために、 *Visit Console* をクリックして、あなたのアプリの情報をセットアップします。アプリの情報は、画像、連絡先メールアドレス、そしてプライバシーポリシーを含みます。この情報は、レビューに提出する前に全て編集可能です。
+1. このアプリが Transactions を使用することを指示するために、下にあるボックスにチェックを入れます。
+1. もし決済方法をまだセットアップしていない場合は、あなたの携帯端末上のGoogleアシスタント設定にて、あなたのアカウントでの決済方法をセットアップします。
+1. あなたのアプリの Overview に戻る、 *Test* をクリックします。
+1. 左のパネルにて、 *Simulator* をクリックします。
+1. シミュレータ内で `Talk to my test app` とタイプするか、あなたの開発者アカウントでサインインされたActions on Googleが有効なデバイスに `OK Google, talk to my test app` と言います。
+1. トランザクションをテストするために、以下の指示に従います。
+1. トランザクションを確認する際に決済をテストするために、サンドボックスモードでのテストを指定するActionsコンソールシミュレータ内のボックスのチェックを外します。
 
-#### To test a transaction
+デプロイに関する詳細は、 [documentation](https://developers.google.com/actions/dialogflow/deploy-fulfillment) をご覧ください。
 
-1. Determine a unique Order ID for the transaction you want to test, and
-replace the `<UNIQUE_ORDER_ID>` in the `transaction_decision_action` and
-`transaction_decision_complete` intent handlers. You may
-need to change this and redeploy your webhook each time you want to test a transaction
-confirmation.
-1. Determine the [payment method](https://developers.google.com/actions/transactions/dev-guide#choose_a_payment_method)
-you wish to accept in the app. The app uses action provided payment by default.
-If you want to use a Google-provided payment instrument, uncomment the annotated
-code in the `transaction_decision_action` and `transaction_decision_complete` intent handlers in `index.js`.
-1. It must be confirmed that the [user can transact](https://developers.google.com/actions/transactions/dev-guide#check_for_transaction_requirements).
-To check this, say/type either
-      * `check transaction without payment` - to check requirements for a transaction without payment.
-      * `check transaction with Google payment` - to check requirements for a transaction where
-      the user pays with an Google-provided payment instrument stored under their account.
-      * `check transaction with action payment` - to check requirements for a transaction where
-      the user will pay with a payment instrument that you are providing.
-1. (Optional) The user's delivery address can then be acquired by saying/typing
-`get delivery address`. This will present the user with a flow to select from
-an available delivery address.
-5. To confirm the transaction, simply say/type `confirm transaction`. Here, the
-`transaction_decision_action` intent will be handled in `index.js`.
-6. You should see a transaction receipt, and a final confirmation of the order.
+#### トランザクションのテスト
 
-#### Troubleshooting
+1. テストしたいトランザクションに対してユニークな注文IDを決定します。そして、 `transaction_decision_action` および `transaction_decision_complete` インテントハンドラ内の `<UNIQUE_ORDER_ID>` を置き換えます。トランザクションの確認をテストしたい時は、毎回この変更と再デプロイが必要かもしれません。
+1. アプリで受け付けたい [決済方法](https://developers.google.com/actions/transactions/dev-guide#choose_a_payment_method) を決定します。アプリは、デフォルトでアクションが提供する決済を使います。もしGoogleが提供する決済手段を使いたい場合は、 `index.js` 内の `transaction_decision_action` および `transaction_decision_complete` インテントハンドラ内の注釈されたコードのコメントを外します。
+1. [ユーザが取引可能](https://developers.google.com/actions/transactions/dev-guide#check_for_transaction_requirements) であることを確認する必要があります。これをチェックするために、発言するか、タイプします。
+      * `check transaction without payment` - 決済なしでトランザクションを要求することを確認する。
+      * `check transaction with Google payment` - ユーザのアカウントにてストアされているGoogleが提供する決済手段を使ってユーザが決済を行うトランザクションの要求を確認する。
+      * `check transaction with action payment` - あなたが提供している決済手段を使ってユーザが決済するトランザクションの要求を確認する。
+1. (任意) その後、 `get delivery address` と言う/タイプすることで、ユーザの配送先住所を得ることができます。これは、利用可能な配送先住所を選択するためのフローがユーザに示されます。
+1. トランザクションの確認のために、単純に `confirm transaction` と言う/タイプします。ここで、 `index.js` 内の `transaction_decision_action` インテントが処理されます。
+1. トランザクションのレシートと、注文の最終的な確認をあなたは行うことになります。
 
-If the app isn't working, try the following:
-* Make sure your Actions console project has filled App Information section,
-including name, images, email address, etc. This is required for testing transactions.
-After changing this, you may need to re-enable testing in the Actions console.
-* Make sure your Actions console project indicates that it is using Transactions
-using the checkbox at the bottom of App Information
-* Make sure you've replaced the `<UNIQUE_ORDER_ID>` in `index.js`,  and replace it
-each time you test the app.
-* The full transactions flow may only be testable on a phone.
+#### トラブルシューティング
 
-#### To use the Order Update module (`order-update.js`),
+もしアプリが動作していない場合は、以下を試してみてください。
 
-1. Visit the [Google Cloud console](https://console.cloud.google.com/)
-for the project used in the [Actions console](https://console.actions.google.com).
-1. Navigate to the [API Library](https://console.cloud.google.com/apis/library).
-1. Search for and enable the Google Actions API.
-1. Navigate to the Credentials page in the API manager. You may need to enable access.
-1. Click Create credentials > Service Account Key
-1. Click the Select box under Service Account and click New Service Account
-1. Give the Service Account a name (like "PROJECT_NAME-order-update") and the
-role of Project Owner
-1. Select the JSON key type
-1. Click Create
-1. A JSON service account key will be downloaded to the local machine.
-1. In `order-update.js`, insert the file path to your key.
+* Actionsコンソールプロジェクトにて、名前、画像、メールアドレスなどを含むApp Informationセクションが記入されていることを確認してください。これは、トランザクションをテストするために必要となります。これを変更した後は、Actionsコンソールにてテストするために再度有効化する必要があるかも知れません。
+* Actionsコントールプロジェクトにて、App Informationの下にあるチェックボックスを使って、トランザクションを使用することを指示していることを確認してください。
+* `index.js` 内の `<UNIQUE_ORDER_ID>` を置き換えたことを確認してください。そして、アプリをテストする度にそれを置き換えてください。
+* 完全なトランザクションフローは、携帯端末上でのみテスト可能です。
 
-## References and How to report bugs
+#### 注文アップデートモジュールの使用 (`order-update.js`),
+
+1. [Actions console](https://console.actions.google.com) で使われているプロジェクトに対する [Google Cloud console](https://console.cloud.google.com/) を開きます。
+1. [API Library](https://console.cloud.google.com/apis/library) に遷移します。
+1. Google Actions APIを探して、有効にします。
+1. APIマネージャ内で Credentials ページに行きます。あなたはアクセスを有効にする必要があるでしょう。
+1. Create credentials > Service Account Key をクリックします。
+1. Service Accountの下にある選択ボックスをクリックして、New Service Account をクリックします。
+1. Service Accountに名前（"PROJECT_NAME-order-update" のような）とProject Owner権限を与えます。
+1. JSON key typeを選択します。
+1. Create をクリックします。
+1. サービスアカウントキーのJSONファイルがローカルマシンにダウンロードされます。
+1. `order-update.js` にて、あなたのキーのファイルパスを記載します。
+
+## リファレンスおよびバグレポートの方法
+
 * Actions on Google documentation: [https://developers.google.com/actions/](https://developers.google.com/actions/).
-* If you find any issues, please open a bug here on GitHub.
-* Questions are answered on [StackOverflow](https://stackoverflow.com/questions/tagged/actions-on-google).
+* もし何か問題を発見した場合は、ここのGitHubのバグをオープンしてください。
+* 質問は、[StackOverflow](https://stackoverflow.com/questions/tagged/actions-on-google)でお答えします。
 
-## How to make contributions?
-Please read and follow the steps in the CONTRIBUTING.md.
+## コントリビューションの方法
 
-## License
-See LICENSE.md.
+CONTRIBUTING.md を読み、手順に従ってください。
 
-## Terms
-Your use of this sample is subject to, and by using or downloading the sample files you agree to comply with, the [Google APIs Terms of Service](https://developers.google.com/terms/).
+## ライセンス
+
+LICENSE.md をご覧ください。
+
+## 規約
+
+このサンプルの使用は、サンプルファイルのダウンロードまたは利用によって、[Google APIs Terms of Service](https://developers.google.com/terms/) に従い、そして同意したと見なします。
 
 ## Google+
-Actions on Google Developers Community on Google+ [https://g.co/actionsdev](https://g.co/actionsdev).
 
+Actions on Google Developers Community on Google+ [https://g.co/actionsdev](https://g.co/actionsdev).
