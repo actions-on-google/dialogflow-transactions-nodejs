@@ -15,10 +15,10 @@ comments in `index.js` demonstrating this behavior.
 ## Setup Instructions
 
 ### Steps
-1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing.
-1. Under *Build a custom app*, click *BUILD* in the Dialogflow box and then click *Create Actions on Dialogflow*.
-1. Disable the Dialogflow V2 API under the *API Version* section. This sample uses Dialogflow V1 API.
-1. Click *Save* to save the project.
+1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing and click *Create Project*.
+1. Click *Skip*, located on the top right to skip over category selection menu.
+1. On the left navigation menu under *BUILD*, click on *Actions*. Click on *Add Your First Action* and choose your app's language(s).
+1. Select *Custom intent*, click *BUILD*. This will open a Dialogflow console. Click *CREATE*.
 1. Click on the gear icon to see the project settings.
 1. Select *Export and Import*.
 1. Select *Restore from zip*. Follow the directions to restore from the Transactions.zip file in this repo.
@@ -27,14 +27,14 @@ comments in `index.js` demonstrating this behavior.
    1. Run `firebase deploy --only functions` and take note of the endpoint where the fulfillment webhook has been published. It should look like `Function URL (transactions): https://${REGION}-${PROJECT}.cloudfunctions.net/transactions`
 1. Go back to the Dialogflow console and select *Fulfillment* from the left navigation menu.
 1. Enable *Webhook*, set the value of *URL* to the `Function URL` from the previous step, then click *Save*.
-1. Open Dialogflow's *Integrations* page, open the *Settings* menu for *Actions on Google*, click *Authorize* if needed, then click *Update*.
-1. Click *Visit Console* to return to the Actions console, and set up your App info, including images, a
-contact email, and privacy policy. This information can all be edited before
+1. Select *Integrations* from the left navigation menu and open the *Integration Settings* menu for Actions on Google. Click *Manage Assistant App*, which will take you to the [Actions on Google Console](https://console.actions.google.com).
+1. On the left navigation menu under *DEPLOY*, click on *Directory Infomration*.
+1. Add your App info, including images, a contact email and privacy policy. This information can all be edited before
 submitting for review.
-1. Check the box at the bottom to indicate this app uses Transactions.
+1. Check the box at the bottom to indicate this app uses Transactions under *Additional Information*. Click *Save*.
 1. Set up a payment method for your account in the Google Assistant settings on your phone if you haven't set one up already.
-1. Return to your App overview, and hit *Test*.
-1. In the left panel, click *Simulator*.
+1. Return [Actions on Google Console](https://console.actions.google.com), on the left navigation menu under *Test*, click on *Simulator*.
+1. Click *Start Testing* and select the latest version (VERSION - Draft).
 1. Type `Talk to my test app` in the simulator, or say `OK Google, talk to my test app` to any Actions on Google enabled device signed into your
 developer account.
 1. Follow the instructions below to test a transaction.
