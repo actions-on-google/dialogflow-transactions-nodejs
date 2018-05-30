@@ -56,7 +56,6 @@ If you want to use a Google-provided payment instrument, uncomment the annotated
 code in the `transaction_decision_action` and `transaction_decision_complete` intent handlers in `index.js`.
 1. It must be confirmed that the [user can transact](https://developers.google.com/actions/transactions/dev-guide#check_for_transaction_requirements).
 To check this, say/type either
-      * `check transaction without payment` - to check requirements for a transaction without payment.
       * `check transaction with Google payment` - to check requirements for a transaction where
       the user pays with an Google-provided payment instrument stored under their account.
       * `check transaction with action payment` - to check requirements for a transaction where

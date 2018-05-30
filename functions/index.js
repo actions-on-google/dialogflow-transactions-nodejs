@@ -29,10 +29,6 @@ const GENERIC_EXTENSION_TYPE =
   'type.googleapis.com/google.actions.v2.orders.GenericExtension';
 const UNIQUE_ORDER_ID = '<UNIQUE_ORDER_ID>';
 
-app.intent('transaction_check_nopayment', (conv) => {
-  conv.ask(new TransactionRequirements());
-});
-
 app.intent('transaction_check_action', (conv) => {
   conv.ask(new TransactionRequirements({
     orderOptions: {

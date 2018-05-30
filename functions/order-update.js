@@ -11,11 +11,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// [START order_update]
+
+// Import the 'googleapis' module for authorizing the request.
 const google = require('googleapis');
+
+// Import the 'request' module for sending an HTTP POST request.
 const request = require('request');
+
+// Import the OrderUpdate class from the Actions on Google client library.
 const {OrderUpdate} = require('actions-on-google');
+
+// Import the service account key used to authorize the request. Replace the
+// string path with a path to your service account key.
 const key = require('./path/to/key.json');
 
+// Create a new JWT client for the Actions API using credentials from the
+// service account key.
 let jwtClient = new google.auth.JWT(
   key.client_email,
   null,
@@ -24,21 +36,22 @@ let jwtClient = new google.auth.JWT(
   null
 );
 
+// Authorize the client asynchronously, passing in a callback to run
+// upon authorization.
 jwtClient.authorize((err, tokens) => {
   if (err) {
     console.log(err);
     return;
   }
 
+  // Get the current time in ISO 8601 format.
   const currentTime = new Date().toISOString();
 
-  // ID of the order to update
-  let actionOrderId = '<UNIQUE_ORDER_ID>';
+  // Declare the ID of the order to update.
+  const actionOrderId = '<UNIQUE_ORDER_ID>';
 
-  /* CANCELLED, FULFILLED, REJECTED, or RETURNED
-   are the states that we notify via push, and only once per state change */
-
-  let orderUpdate = new OrderUpdate({
+  // Declare the particular updated state of the order.
+  const orderUpdate = new OrderUpdate({
     actionOrderId: actionOrderId,
     orderState: {
       label: 'Order has been delivered!',
@@ -47,8 +60,10 @@ jwtClient.authorize((err, tokens) => {
     updateTime: currentTime,
   });
 
-  let bearer = 'Bearer ' + tokens.access_token;
-  let options = {
+  // Set up the POST request header and body, including the authorized token
+  // and order update.
+  const bearer = 'Bearer ' + tokens.access_token;
+  const options = {
     method: 'POST',
     url: 'https://actions.googleapis.com/v2/conversations:send',
     headers: {
@@ -58,11 +73,13 @@ jwtClient.authorize((err, tokens) => {
       custom_push_message: {
         order_update: orderUpdate,
       },
-      // Comment out for non-sandbox transactions
+      // The line below should be removed for non-sandbox transactions.
       is_in_sandbox: true,
     },
     json: true,
   };
+
+  // Send the POST request to the Actions API.
   request.post(options, (err, httpResponse, body) => {
     if (err) {
       console.log(err);
@@ -71,3 +88,5 @@ jwtClient.authorize((err, tokens) => {
     console.log(body);
   });
 });
+
+// [END order_update]
