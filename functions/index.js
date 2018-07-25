@@ -52,9 +52,20 @@ app.intent('transaction_check_google', (conv) => {
       googleProvidedOptions: {
         prepaidCardDisallowed: false,
         supportedCardNetworks: ['VISA', 'AMEX'],
-        // These will be provided by payment processor,
-        // like Stripe, Braintree, or Vantiv.
-        tokenizationParameters: {},
+        // Tokenization parameter data  will be provided by
+        // a payment processor, like Stripe, Braintree, or Vantiv.
+        // Below are placeholder parameters for Braintree.
+        tokenizationParameters: {
+          parameters: {
+            "gateway": "braintree",
+            "braintree:sdkVersion": "1.4.0",
+            "braintree:apiVersion": "v1",
+            "braintree:merchantId": "xxxxxxxxxxx",
+            "braintree:clientKey": "sandbox_xxxxxxxxxxxxxxx",
+            "braintree:authorizationFingerprint": "sandbox_xxxxxxxxxxxxxxx"
+          },
+          tokenizationType: "PAYMENT_GATEWAY"
+        },
       },
     },
   }));
@@ -271,9 +282,19 @@ app.intent('transaction_decision_action', (conv) => {
       googleProvidedOptions: {
         prepaidCardDisallowed: false,
         supportedCardNetworks: ['VISA', 'AMEX'],
-        // These will be provided by payment processor,
-        // like Stripe, Braintree, or Vantiv.
-        tokenizationParameters: {},
+          // Tokenization parameter data  will be provided by
+          // a payment processor, like Stripe, Braintree, or Vantiv.
+          // Below are placeholder parameters for Braintree.
+          parameters: {
+            "gateway": "braintree",
+            "braintree:sdkVersion": "1.4.0",
+            "braintree:apiVersion": "v1",
+            "braintree:merchantId": "xxxxxxxxxxx",
+            "braintree:clientKey": "sandbox_xxxxxxxxxxxxxxx",
+            "braintree:authorizationFingerprint": "sandbox_xxxxxxxxxxxxxxx"
+          },
+          tokenizationType: "PAYMENT_GATEWAY"
+        },
       },
     },
     proposedOrder: order,
