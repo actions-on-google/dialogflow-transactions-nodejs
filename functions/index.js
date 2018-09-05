@@ -202,36 +202,36 @@ app.intent('transaction_decision_action', (conv) => {
         },
       ],
       notes: 'The Memoir collection',
-      otherItems: [
-        {
-          name: 'Subtotal',
-          id: 'subtotal',
-          price: {
-            amount: {
-              currencyCode: 'USD',
-              nanos: 220000000,
-              units: 32,
-            },
-            type: 'ESTIMATE',
-          },
-          type: 'SUBTOTAL',
-        },
-        {
-          name: 'Tax',
-          id: 'tax',
-          price: {
-            amount: {
-              currencyCode: 'USD',
-              nanos: 780000000,
-              units: 2,
-            },
-            type: 'ESTIMATE',
-          },
-          type: 'TAX',
-        },
-      ],
+      otherItems: [],
     },
-    otherItems: [],
+    otherItems: [
+      {
+        name: 'Subtotal',
+        id: 'subtotal',
+        price: {
+          amount: {
+            currencyCode: 'USD',
+            nanos: 220000000,
+            units: 32,
+          },
+          type: 'ESTIMATE',
+        },
+        type: 'SUBTOTAL',
+      },
+      {
+        name: 'Tax',
+        id: 'tax',
+        price: {
+          amount: {
+            currencyCode: 'USD',
+            nanos: 780000000,
+            units: 2,
+          },
+          type: 'ESTIMATE',
+        },
+        type: 'TAX',
+      },
+    ],
     totalPrice: {
       amount: {
         currencyCode: 'USD',
