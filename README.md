@@ -94,6 +94,8 @@ role of Project Owner
 1. Click Create
 1. A JSON service account key will be downloaded to the local machine.
 1. In `order-update.js`, insert the file path to your key.
+1. In `order-update.js`, replace the `<UNIQUE_ORDER_ID>` placeholder string assigned to actionOrderId with the ID of the order you wish to update.
+1. Run the script to send an order update by opening a terminal and running the following command: `node order-update.js`.
 
 ## References and How to report bugs
 * Actions on Google documentation: [https://developers.google.com/actions/](https://developers.google.com/actions/).
