@@ -57,14 +57,14 @@ app.intent('transaction_check_google', (conv) => {
         // Below are placeholder parameters for Braintree.
         tokenizationParameters: {
           parameters: {
-            "gateway": "braintree",
-            "braintree:sdkVersion": "1.4.0",
-            "braintree:apiVersion": "v1",
-            "braintree:merchantId": "xxxxxxxxxxx",
-            "braintree:clientKey": "sandbox_xxxxxxxxxxxxxxx",
-            "braintree:authorizationFingerprint": "sandbox_xxxxxxxxxxxxxxx"
+            'gateway': 'braintree',
+            'braintree:sdkVersion': '1.4.0',
+            'braintree:apiVersion': 'v1',
+            'braintree:merchantId': 'xxxxxxxxxxx',
+            'braintree:clientKey': 'sandbox_xxxxxxxxxxxxxxx',
+            'braintree:authorizationFingerprint': 'sandbox_xxxxxxxxxxxxxxx',
           },
-          tokenizationType: "PAYMENT_GATEWAY"
+          tokenizationType: 'PAYMENT_GATEWAY',
         },
       },
     },
@@ -273,8 +273,8 @@ app.intent('transaction_decision_action', (conv) => {
   }));
 
   /*
-    // If using Google provided payment instrument instead
-    conv.ask(new TransactionDecision({
+  // If using Google provided payment instrument instead
+  conv.ask(new TransactionDecision({
     orderOptions: {
       requestDeliveryAddress: false,
     },
@@ -285,15 +285,16 @@ app.intent('transaction_decision_action', (conv) => {
           // Tokenization parameter data  will be provided by
           // a payment processor, like Stripe, Braintree, or Vantiv.
           // Below are placeholder parameters for Braintree.
+        tokenizationParameters: {
           parameters: {
-            "gateway": "braintree",
-            "braintree:sdkVersion": "1.4.0",
-            "braintree:apiVersion": "v1",
-            "braintree:merchantId": "xxxxxxxxxxx",
-            "braintree:clientKey": "sandbox_xxxxxxxxxxxxxxx",
-            "braintree:authorizationFingerprint": "sandbox_xxxxxxxxxxxxxxx"
+            'gateway': 'braintree',
+            'braintree:sdkVersion': '1.4.0',
+            'braintree:apiVersion': 'v1',
+            'braintree:merchantId': 'xxxxxxxxxxx',
+            'braintree:clientKey': 'sandbox_xxxxxxxxxxxxxxx',
+            'braintree:authorizationFingerprint': 'sandbox_xxxxxxxxxxxxxxx',
           },
-          tokenizationType: "PAYMENT_GATEWAY"
+          tokenizationType: 'PAYMENT_GATEWAY',
         },
       },
     },
