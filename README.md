@@ -1,116 +1,82 @@
-# Actions on Google: Transactions Sample using Node.js
+# Actions on Google: Transactions Sample
 
-This sample shows everything you need to facilitate transactions for your app.
-It includes the main checkout flows, including checking for transaction
-requirements, getting the user's delivery address, and confirming the
-transaction. There is also an order update module (`order-update.js`) that can
-be used to asynchronously update order status at any time.
+This sample shows everything you need to facilitate transactions for your Action in Node.js, including:
+  + Check for transaction requirements
+  + Get the delivery address
+  + Confirm the transaction
+  + Examples of Google Pay and merchant-managed payment options
+  + Asynchronously update order status at any time (via `order-update.js`)
 
-This sample provides examples of transaction payment configurations for
-action provided payments and transactions without payment, but the Actions on
-Google library also offers functionality for Google provided payment by
-providing tokenization parameters from your payment processor. There are
-comments in `index.js` demonstrating this behavior.
+### Setup Instructions
 
-## Setup Instructions
+#### Action Configuration
+1. From the [Actions on Google Console](https://console.actions.google.com), add a new project (this will become your *Project ID*) > **Create Project** > under **More options** > **Conversational**
+1. In order to test out a transactions-based sample the following info must be provided. In the Actions console, from the left navigation menu under **Deploy** > **Directory Information** >
+  + **Images** > add a small logo image
+  + **Contact details** > add **Developer email**
+  + **Privacy and consent** > add link to **Privacy Policy**
+  + **Additional information** >
+    + Select a **Category**
+    + Do your Actions use the Transactions API to perform transactions of physical goods? > **Yes** > **Save**.
+1. From the left navigation menu under **Build** > **Actions** > **Add Your First Action** > **BUILD** (this will bring you to the Dialogflow console) > Select language and time zone > **CREATE**.
+1. In Dialogflow, go to **Settings** ⚙ > **Export and Import** > **Restore from zip**.
+    + Follow the directions to restore from the `agent.zip` file in this repo.
 
-### Steps
-1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing and click *Create Project*.
-1. Scroll down to the *More Options* section, and click on the *Conversational* card.
-1. On the left navigation menu under *BUILD*, click on *Actions*. Click on *Add Your First Action* and choose your app's language(s).
-1. Select *Custom intent*, click *BUILD*. This will open a Dialogflow console. Click *CREATE*.
-1. Click on the gear icon to see the project settings.
-1. Select *Export and Import*.
-1. Select *Restore from zip*. Follow the directions to restore from the Transactions.zip file in this repo.
-1. Deploy the fulfillment webhook provided in the functions folder using [Google Cloud Functions for Firebase](https://firebase.google.com/docs/functions/):
-   1. Follow the instructions to [set up and initialize Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/get-started#set_up_and_initialize_functions_sdk). Make sure to select the project that you have previously generated in the Actions on Google Console and to reply `N` when asked to overwrite existing files by the Firebase CLI.
-   1. Run `firebase deploy --only functions` and take note of the endpoint where the fulfillment webhook has been published. It should look like `Function URL (transactions): https://${REGION}-${PROJECT}.cloudfunctions.net/transactions`
-1. Go back to the Dialogflow console and select *Fulfillment* from the left navigation menu.
-1. Enable *Webhook*, set the value of *URL* to the `Function URL` from the previous step, then click *Save*.
-1. Select *Integrations* from the left navigation menu and open the *Integration Settings* menu for Actions on Google. Click *Manage Assistant App*, which will take you to the [Actions on Google Console](https://console.actions.google.com).
-1. On the left navigation menu under *DEPLOY*, click on *Directory Infomration*.
-1. Add your App info, including images, a contact email and privacy policy. This information can all be edited before
-submitting for review.
-1. Check the box at the bottom to indicate this app uses Transactions under *Additional Information*. Click *Save*.
-1. Set up a payment method for your account in the Google Assistant settings on your phone if you haven't set one up already.
-1. Return [Actions on Google Console](https://console.actions.google.com), on the left navigation menu under *Test*, click on *Simulator*.
-1. Click *Start Testing* and select the latest version (VERSION - Draft).
-1. Type `Talk to my test app` in the simulator, or say `OK Google, talk to my test app` to any Actions on Google enabled device signed into your
-developer account.
-1. Follow the instructions below to test a transaction.
-1. To test payment when confirming transaction, uncheck the box in the Actions
-console simulator indicating testing in Sandbox mode.
+#### Firebase Deployment & Webhook Configuration
+1. Install Firebase CLI
+   + `npm install -g firebase-tools`
+1. Firebase SDK for Cloud Functions
+   + `firebase login`
+   + `cd functions/`
+   + `npm install`
+   + `firebase init functions`
+      + What language would you like to write Cloud Functions > **JavaScript**
+      + File functions/package.json already exists. Overwrite? > No
+      + File functions/index.js already exists. Overwrite? > No
+   + `firebase deploy`
+1. Copy the endpoint where the fulfillment webhook has been published:
+  ```
+  Function URL (webhook): https://<REGION>-<PROJECT_ID>.cloudfunctions.net/webhook
+  ```
+1. In [Dialogflow Console](https://console.dialogflow.com) > **Fulfullment** > **Enable** Webhook > Set **URL** to the **Function URL** that was returned after the deploy command > **SAVE**.
 
-For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/dialogflow/deploy-fulfillment).
 
-#### To test a transaction
+#### Testing this Sample
+1. From a mobile device > **Assistant** app > **Personal Info** > **Payments** > Set up a payment method for your Google account associated with this project.
+1. In the [Dialogflow console](https://console.dialogflow.com), from the left navigation menu > **Integrations** > **Integration Settings** under Google Assistant > Enable **Auto-preview changes** >  **Test** to open the Actions on Google simulator OR
+  + From the [Actions on Google Console](https://console.actions.google.com) > under **Test** > select **Simulator**.
+1. From the Simulator, ensure that you are testing in **Development Sandbox: Enabled** mode
+1. Type `Talk to my test app` in the simulator, or say `OK Google, talk to my test app` to Google Assistant on a mobile device associated with your Action's account.
 
-1. Determine a unique Order ID for the transaction you want to test, and
-replace the `<UNIQUE_ORDER_ID>` in the `transaction_decision_action` and
-`transaction_decision_complete` intent handlers. You may
-need to change this and redeploy your webhook each time you want to test a transaction
-confirmation.
-1. Determine the [payment method](https://developers.google.com/actions/transactions/dev-guide#choose_a_payment_method)
-you wish to accept in the app. The app uses action provided payment by default.
-If you want to use a Google-provided payment instrument, uncomment the annotated
-code in the `transaction_decision_action` and `transaction_decision_complete` intent handlers in `index.js`.
-1. It must be confirmed that the [user can transact](https://developers.google.com/actions/transactions/dev-guide#check_for_transaction_requirements).
-To check this, say/type either
-      * `check transaction with Google payment` - to check requirements for a transaction where
-      the user pays with an Google-provided payment instrument stored under their account.
-      * `check transaction with action payment` - to check requirements for a transaction where
-      the user will pay with a payment instrument that you are providing.
-1. (Optional) The user's delivery address can then be acquired by saying/typing
-`get delivery address`. This will present the user with a flow to select from
-an available delivery address.
-5. To confirm the transaction, simply say/type `confirm transaction`. Here, the
-`transaction_decision_action` intent will be handled in `index.js`.
-6. You should see a transaction receipt, and a final confirmation of the order.
 
-#### Troubleshooting
-
-If the app isn't working, try the following:
-* Make sure your Actions console project has filled App Information section,
-including name, images, email address, etc. This is required for testing transactions.
-After changing this, you may need to re-enable testing in the Actions console.
-* Make sure your Actions console project indicates that it is using Transactions
-using the checkbox at the bottom of App Information
-* Make sure you've replaced the `<UNIQUE_ORDER_ID>` in `index.js`,  and replace it
-each time you test the app.
-* The full transactions flow may only be testable on a phone.
-
-#### To use the Order Update module (`order-update.js`),
-
-1. Visit the [Google Cloud console](https://console.cloud.google.com/)
-for the project used in the [Actions console](https://console.actions.google.com).
-1. Navigate to the [API Library](https://console.cloud.google.com/apis/library).
-1. Search for and enable the Google Actions API.
-1. Navigate to the Credentials page in the API manager. You may need to enable access.
-1. Click Create credentials > Service Account Key
-1. Click the Select box under Service Account and click New Service Account
-1. Give the Service Account a name (like "PROJECT_NAME-order-update") and the
-role of Project Owner
-1. Select the JSON key type
-1. Click Create
-1. A JSON service account key will be downloaded to the local machine.
+#### Order Update Configuration (`order-update.js`)
+1. From the [Dialogflow's console](https://console.dialogflow.com) > go to **Settings** ⚙ and under the `General` tab > go the `Project Id` link, which will take you to the **Google Cloud Platform** console
+1. In the Cloud console, go to **Menu ☰** > **APIs & Services** > **Library**
+1. Select **Actions API** > **Enable**
+1. Under **Menu ☰** > **APIs & Services** > **Credentials** > **Create Credentials** > **Service Account Key**.
+1. From the dropdown, select **New Service Account**
+    + name:  `service-account`
+    + role:  **Project/Owner**
+    + key type: **JSON** > **Create**
+    + Your private JSON file will be downloaded to your local machine
 1. In `order-update.js`, insert the file path to your key.
 1. In `order-update.js`, replace the `<UNIQUE_ORDER_ID>` placeholder string assigned to actionOrderId with the ID of the order you wish to update.
+    + Similarly, ensure that the variable `UNIQUE_ORDER_ID` matches between index.js and order-update.js
 1. Run the script to send an order update by opening a terminal and running the following command: `node order-update.js`.
 
-## References and How to report bugs
-* Actions on Google documentation: [https://developers.google.com/actions/](https://developers.google.com/actions/).
-* If you find any issues, please open a bug here on GitHub.
-* Questions are answered on [StackOverflow](https://stackoverflow.com/questions/tagged/actions-on-google).
+### References & Issues
++ Questions? Go to [StackOverflow](https://stackoverflow.com/questions/tagged/actions-on-google), [Actions on Google G+ Developer Community](https://g.co/actionsdev), or [Support](https://developers.google.com/actions/support/).
++ For bugs, please report an issue on Github.
++ For Actions on Google [documentation](https://developers.google.com/actions/).
++ For specifics about [Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/get-started#set_up_and_initialize_functions_sdk).
++ For details on deploying [Cloud Functions for Firebase](https://firebase.google.com/docs/functions/).
++ For help with [troubleshooting physical transactions](https://developers.google.com/actions/transactions/physical/troubleshooting).
 
-## How to make contributions?
-Please read and follow the steps in the CONTRIBUTING.md.
+### Make Contributions
+Please read and follow the steps in the [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## License
-See LICENSE.md.
+### License
+See [LICENSE](LICENSE).
 
-## Terms
+### Terms
 Your use of this sample is subject to, and by using or downloading the sample files you agree to comply with, the [Google APIs Terms of Service](https://developers.google.com/terms/).
-
-## Google+
-Actions on Google Developers Community on Google+ [https://g.co/actionsdev](https://g.co/actionsdev).
-

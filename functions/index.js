@@ -20,6 +20,8 @@ const {
   OrderUpdate,
   TransactionDecision,
   TransactionRequirements,
+  Suggestions,
+  SimpleResponse,
 } = require('actions-on-google');
 const functions = require('firebase-functions');
 
@@ -27,9 +29,24 @@ const app = dialogflow({debug: true});
 
 const GENERIC_EXTENSION_TYPE =
   'type.googleapis.com/google.actions.v2.orders.GenericExtension';
-const UNIQUE_ORDER_ID = '<UNIQUE_ORDER_ID>';
 
-app.intent('transaction_check_action', (conv) => {
+const suggestIntents = [
+  'Merchant Transaction',
+  'Google Pay Transaction',
+];
+
+app.intent('Default Welcome Intent', (conv) => {
+  conv.ask(new SimpleResponse({
+    speech: '  Hey there! I can help you go through a transaction with Google ' +
+      'Pay and Merchant-managed payments.',
+    text: '  Hi there! I can help you go through a transaction with Google ' +
+      'Pay and Merchant-managed payments.',
+  }));
+  conv.ask(new Suggestions(suggestIntents));
+});
+
+app.intent('Transaction Merchant', (conv) => {
+  conv.contexts.set('merchant_pay', 5);
   conv.ask(new TransactionRequirements({
     orderOptions: {
       requestDeliveryAddress: false,
@@ -43,7 +60,8 @@ app.intent('transaction_check_action', (conv) => {
   }));
 });
 
-app.intent('transaction_check_google', (conv) => {
+app.intent('Transaction Google', (conv) => {
+  conv.contexts.set('google_pay', 5);
   conv.ask(new TransactionRequirements({
     orderOptions: {
       requestDeliveryAddress: false,
@@ -51,11 +69,10 @@ app.intent('transaction_check_google', (conv) => {
     paymentOptions: {
       googleProvidedOptions: {
         prepaidCardDisallowed: false,
-        supportedCardNetworks: ['VISA', 'AMEX'],
-        // Tokenization parameter data  will be provided by
-        // a payment processor, like Stripe, Braintree, or Vantiv.
-        // Below are placeholder parameters for Braintree.
+        supportedCardNetworks: ['VISA', 'AMEX', 'DISCOVER', 'MASTERCARD'],
         tokenizationParameters: {
+        // Tokenization parameter data will be provided by a
+        // payment processor, i.e. Stripe, Braintree, Vantiv, etc.
           parameters: {
             'gateway': 'braintree',
             'braintree:sdkVersion': '1.4.0',
@@ -71,18 +88,19 @@ app.intent('transaction_check_google', (conv) => {
   }));
 });
 
-app.intent('transaction_check_complete', (conv) => {
+app.intent('Transaction Check Complete', (conv) => {
   const arg = conv.arguments.get('TRANSACTION_REQUIREMENTS_CHECK_RESULT');
   if (arg && arg.resultType ==='OK') {
     // Normally take the user through cart building flow
     conv.ask(`Looks like you're good to go! ` +
       `Try saying "Get Delivery Address".`);
+    conv.ask(new Suggestions(['Get Delivery Address']));
   } else {
     conv.close('Transaction failed.');
   }
 });
 
-app.intent('delivery_address', (conv) => {
+app.intent('Delivery Address', (conv) => {
   conv.ask(new DeliveryAddress({
     addressOptions: {
       reason: 'To know where to send the order',
@@ -90,19 +108,23 @@ app.intent('delivery_address', (conv) => {
   }));
 });
 
-app.intent('delivery_address_complete', (conv) => {
+app.intent('Delivery Address Complete', (conv) => {
   const arg = conv.arguments.get('DELIVERY_ADDRESS_VALUE');
   if (arg.userDecision ==='ACCEPTED') {
     console.log('DELIVERY ADDRESS: ' +
     arg.location.postalAddress.addressLines[0]);
     conv.data.deliveryAddress = arg.location;
     conv.ask('Great, got your address! Now say "confirm transaction".');
+    conv.ask(new Suggestions(['Confirm Transaction']));
   } else {
     conv.close('I failed to get your delivery address.');
   }
 });
 
-app.intent('transaction_decision_action', (conv) => {
+app.intent('Transaction Decision', (conv) => {
+  // Each order needs to have a unique ID 
+  const UNIQUE_ORDER_ID = Math.random().toString(32).substr(2);
+  conv.data.UNIQUE_ORDER_ID = UNIQUE_ORDER_ID;
   const order = {
     id: UNIQUE_ORDER_ID,
     cart: {
@@ -256,62 +278,58 @@ app.intent('transaction_decision_action', (conv) => {
     };
   }
 
-  // To test payment w/ sample,
-  // uncheck the 'Testing in Sandbox Mode' box in the
-  // Actions console simulator
-  conv.ask(new TransactionDecision({
-    orderOptions: {
-      requestDeliveryAddress: true,
-    },
-    paymentOptions: {
-      actionProvidedOptions: {
-        paymentType: 'PAYMENT_CARD',
-        displayName: 'VISA-1234',
+  if (conv.contexts.get('google_pay') != null) {
+    conv.ask(new TransactionDecision({
+      orderOptions: {
+        requestDeliveryAddress: true,
       },
-    },
-    proposedOrder: order,
-  }));
-
-  /*
-  // If using Google provided payment instrument instead
-  conv.ask(new TransactionDecision({
-    orderOptions: {
-      requestDeliveryAddress: false,
-    },
-    paymentOptions: {
-      googleProvidedOptions: {
-        prepaidCardDisallowed: false,
-        supportedCardNetworks: ['VISA', 'AMEX'],
-          // Tokenization parameter data  will be provided by
-          // a payment processor, like Stripe, Braintree, or Vantiv.
-          // Below are placeholder parameters for Braintree.
-        tokenizationParameters: {
-          parameters: {
-            'gateway': 'braintree',
-            'braintree:sdkVersion': '1.4.0',
-            'braintree:apiVersion': 'v1',
-            'braintree:merchantId': 'xxxxxxxxxxx',
-            'braintree:clientKey': 'sandbox_xxxxxxxxxxxxxxx',
-            'braintree:authorizationFingerprint': 'sandbox_xxxxxxxxxxxxxxx',
+      paymentOptions: {
+        googleProvidedOptions: {
+          prepaidCardDisallowed: false,
+          supportedCardNetworks: ['VISA', 'AMEX', 'DISCOVER', 'MASTERCARD'],
+          tokenizationParameters: {
+            // Tokenization parameter data  will be provided by
+            // a payment processor, like Stripe, Braintree, Vantiv, etc.
+            parameters: {
+              'gateway': 'braintree',
+              'braintree:sdkVersion': '1.4.0',
+              'braintree:apiVersion': 'v1',
+              'braintree:merchantId': 'xxxxxxxxxxx',
+              'braintree:clientKey': 'sandbox_xxxxxxxxxxxxxxx',
+              'braintree:authorizationFingerprint': 'sandbox_xxxxxxxxxxxxxxx',
+            },
+            tokenizationType: 'PAYMENT_GATEWAY',
           },
-          tokenizationType: 'PAYMENT_GATEWAY',
         },
       },
-    },
-    proposedOrder: order,
-  }));
-  */
+      proposedOrder: order,
+    }));
+  } else {
+    conv.ask(new TransactionDecision({
+      orderOptions: {
+        requestDeliveryAddress: true,
+      },
+      paymentOptions: {
+        actionProvidedOptions: {
+          paymentType: 'PAYMENT_CARD',
+          displayName: 'VISA-1234',
+        },
+      },
+      proposedOrder: order,
+    }));
+  }
 });
 
-app.intent('transaction_decision_complete', (conv) => {
+app.intent('Transaction Decision Complete', (conv) => {
   console.log('Transaction decision complete');
   const arg = conv.arguments.get('TRANSACTION_DECISION_VALUE');
   if (arg && arg.userDecision ==='ORDER_ACCEPTED') {
     const finalOrderId = arg.order.finalOrder.id;
 
-    // Confirm order and make any charges in order processing backend
-    // If using Google provided payment instrument:
-    // const paymentDisplayName = arg.order.paymentInfo.displayName;
+    if (conv.contexts.get('google_pay') != null) {
+      const paymentDisplayName = arg.order.paymentInfo.displayName;
+    }
+
     conv.ask(new OrderUpdate({
       actionOrderId: finalOrderId,
       orderState: {
@@ -321,13 +339,13 @@ app.intent('transaction_decision_complete', (conv) => {
       lineItemUpdates: {},
       updateTime: new Date().toISOString(),
       receipt: {
-        confirmedActionOrderId: UNIQUE_ORDER_ID,
+        confirmedActionOrderId: conv.data.UNIQUE_ORDER_ID,
       },
-      // Replace the URL with your own customer service page
       orderManagementActions: [
         {
           button: {
             openUrlAction: {
+              // Replace the URL with your own customer service page
               url: 'http://example.com/customer-service',
             },
             title: 'Customer Service',
@@ -340,7 +358,7 @@ app.intent('transaction_decision_complete', (conv) => {
         title: 'Notification Title',
       },
     }));
-    conv.ask(`Transaction completed! You're all set!`);
+    conv.ask(`Transaction completed! You're order ${conv.data.UNIQUE_ORDER_ID} is all set!`);
   } else if (arg && arg.userDecision === 'DELIVERY_ADDRESS_UPDATED') {
     conv.ask(new DeliveryAddress({
       addressOptions: {
@@ -352,4 +370,4 @@ app.intent('transaction_decision_complete', (conv) => {
   }
 });
 
-exports.transactions = functions.https.onRequest(app);
+exports.webhook = functions.https.onRequest(app);
