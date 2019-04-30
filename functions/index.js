@@ -122,7 +122,7 @@ app.intent('Delivery Address Complete', (conv) => {
 });
 
 app.intent('Transaction Decision', (conv) => {
-  // Each order needs to have a unique ID 
+  // Each order needs to have a unique ID
   const UNIQUE_ORDER_ID = Math.random().toString(32).substr(2);
   conv.data.UNIQUE_ORDER_ID = UNIQUE_ORDER_ID;
   const order = {
@@ -358,7 +358,7 @@ app.intent('Transaction Decision Complete', (conv) => {
         title: 'Notification Title',
       },
     }));
-    conv.ask(`Transaction completed! You're order ${conv.data.UNIQUE_ORDER_ID} is all set!`);
+    conv.ask(`Transaction completed! Your order ${conv.data.UNIQUE_ORDER_ID} is all set!`);
   } else if (arg && arg.userDecision === 'DELIVERY_ADDRESS_UPDATED') {
     conv.ask(new DeliveryAddress({
       addressOptions: {
@@ -370,4 +370,4 @@ app.intent('Transaction Decision Complete', (conv) => {
   }
 });
 
-exports.webhook = functions.https.onRequest(app);
+exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);

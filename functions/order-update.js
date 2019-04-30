@@ -11,10 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 // [START order_update]
 
 // Import the 'googleapis' module for authorizing the request.
-const google = require('googleapis');
+const {google} = require('googleapis');
 
 // Import the 'request' module for sending an HTTP POST request.
 const request = require('request');
@@ -85,6 +86,7 @@ jwtClient.authorize((err, tokens) => {
       console.log(err);
       return;
     }
+    console.log(`Status: ${httpResponse.statusCode} ${httpResponse.statusMessage}`);
     console.log(body);
   });
 });
