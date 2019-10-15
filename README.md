@@ -22,6 +22,7 @@ This sample shows everything you need to facilitate transactions, including:
 1. From the [Actions on Google Console](https://console.actions.google.com/), New project (this will become your Project ID) > **Create Project** > under **More options** > **Conversational**
 1. From the top menu under **Deploy** > **Directory Information** (left nav), where all of the information is required to run transactions (sandbox or otherwise) unless specifically noted as optional.
     + **Privacy Policy** link: for testing purposes can be `https://www.example.com`
+    + **Terms of Service** link: for testing purposes can be `https://www.example.com`
     + **Additional information** >
        + Select a **Category**
        + Do your Actions use the Transactions API to perform transactions of physical goods? > **Yes** > **Save**.
@@ -56,7 +57,7 @@ This sample shows everything you need to facilitate transactions, including:
     + Your private JSON file will be downloaded to your local machine
 1. In `order-update.js`:
     + Replace `./path/to/key.json` placeholder with the `service-account.json` path
-    + Replace `<UNIQUE_ORDER_ID>` placeholder with the ID of the order you wish to update (`actionOrderId`) -- your order value will be shown in the confirmation response
+    + Replace `<UNIQUE_ORDER_ID>` placeholder with the ID of the order you wish to update (`merchantOrderId`) -- your order value will be shown in the confirmation response
 1. In terminal, in the `functions/`, run the script to send an order update: `node order-update.js`.
     + `Status: 200 OK` will be logged to the console upon a successful order update
 
