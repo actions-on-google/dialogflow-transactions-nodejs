@@ -1,5 +1,5 @@
 // Copyright 2017, Google, Inc.
-// Licensed under the Apache License, Version 2.0 (the 'License');
+// Licensed under the Apache License, Version 2.0 (the 'License')
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -11,84 +11,73 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-// [START order_update]
-
 // Import the 'googleapis' module for authorizing the request.
 const {google} = require('googleapis');
 
-// Import the 'request' module for sending an HTTP POST request.
-const request = require('request');
+// Import the 'node-fetch' module for sending an HTTP POST request.
+const fetch = require('node-fetch');
 
 // Import the OrderUpdate class from the Actions on Google client library.
 const {OrderUpdate} = require('actions-on-google');
 
 // Import the service account key used to authorize the request. Replace the
 // string path with a path to your service account key.
-const key = require('./path/to/key.json');
+const serviceAccountKey = require('./service-account.json');
 
-// Create a new JWT client for the Actions API using credentials from the
-// service account key.
-let jwtClient = new google.auth.JWT(
-  key.client_email,
-  null,
-  key.private_key,
-  ['https://www.googleapis.com/auth/actions.fulfillment.conversation'],
-  null
-);
+const UNIQUE_ORDER_ID = '<UNIQUE_ORDER_ID>';
 
-// Authorize the client asynchronously, passing in a callback to run
-// upon authorization.
-jwtClient.authorize((err, tokens) => {
-  if (err) {
-    console.log(err);
-    return;
-  }
+(async () => {
+  // Create a new JWT client for the Actions API using credentials
+  // from the service account key.
+  const jwtClient = new google.auth.JWT(
+    serviceAccountKey.client_email,
+    null,
+    serviceAccountKey.private_key,
+    ['https://www.googleapis.com/auth/actions.order.developer'],
+    null
+  );
 
-  // Get the current time in ISO 8601 format.
-  const currentTime = new Date().toISOString();
+  // Authorize the client
+  const tokens = await jwtClient.authorize();
 
-  // Declare the ID of the order to update.
-  const actionOrderId = '<UNIQUE_ORDER_ID>';
-
-  // Declare the particular updated state of the order.
+  // Declare order update
   const orderUpdate = new OrderUpdate({
-    actionOrderId: actionOrderId,
-    orderState: {
-      label: 'Order has been delivered!',
-      state: 'FULFILLED',
+    updateMask: [
+      'lastUpdateTime',
+      'purchase.status',
+      'purchase.userVisibleStatusLabel',
+    ].join(','),
+    order: {
+      merchantOrderId: UNIQUE_ORDER_ID, // Specify the ID of the order to update
+      lastUpdateTime: new Date().toISOString(),
+      purchase: {
+        status: 'DELIVERED',
+        userVisibleStatusLabel: 'Order delivered',
+      },
     },
-    updateTime: currentTime,
+    reason: 'Order status updated to delivered.',
   });
 
-  // Set up the POST request header and body, including the authorized token
-  // and order update.
-  const bearer = 'Bearer ' + tokens.access_token;
+  // Set up the PATCH request header and body,
+  // including the authorized token and order update.
   const options = {
-    method: 'POST',
-    url: 'https://actions.googleapis.com/v2/conversations:send',
+    method: 'PATCH',
     headers: {
-      'Authorization': bearer,
+      'Authorization': `Bearer ${tokens.access_token}`
     },
-    body: {
-      custom_push_message: {
-        order_update: orderUpdate,
+    body: JSON.stringify({
+      header: {
+        isInSandbox: true,
       },
-      // The line below should be removed for non-sandbox transactions.
-      is_in_sandbox: true,
-    },
-    json: true,
+      orderUpdate,
+    }),
   };
 
-  // Send the POST request to the Actions API.
-  request.post(options, (err, httpResponse, body) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    console.log(`Status: ${httpResponse.statusCode} ${httpResponse.statusMessage}`);
-    console.log(body);
-  });
-});
-
-// [END order_update]
+  // Send the PATCH request to the Orders API.
+  try {
+    const res = await fetch(`https://actions.googleapis.com/v3/orders/${UNIQUE_ORDER_ID}`, options);
+    console.log(`Response: ${JSON.stringify(await res.json())}`);
+  } catch (e) {
+    console.log(`Error: ${e}`);
+  }
+})();

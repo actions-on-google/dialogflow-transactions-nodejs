@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ad5dce3c-aad3-41ab-8eb6-3068d9565ce0",
+    "data": [
+      {
+        "text": "Transaction Merchant",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "651d8483-60f8-47fe-a255-91ecfab2c848",
+    "data": [
+      {
+        "text": "Merchant Transaction",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "8e82a281-3cbd-4de4-985e-0123dc263e88",
+    "data": [
+      {
+        "text": "merchant-managed pay",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "0d267414-0f32-47a7-97f2-c28f4b46405f",
+    "data": [
+      {
+        "text": "Transaction Check Merchant",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "a49f9014-2095-4df3-8a28-faa1c6655b68",
+    "data": [
+      {
+        "text": "check transaction with merchant payment",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  }
+]

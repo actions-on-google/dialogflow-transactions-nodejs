@@ -14,21 +14,23 @@
 'use strict';
 
 process.env.DEBUG = 'actions-on-google:*';
+
+// Imports
 const {
-  dialogflow,
   DeliveryAddress,
   OrderUpdate,
+  SimpleResponse,
+  Suggestions,
   TransactionDecision,
   TransactionRequirements,
-  Suggestions,
-  SimpleResponse,
 } = require('actions-on-google');
 const functions = require('firebase-functions');
 
-const app = dialogflow({debug: true});
-
-const GENERIC_EXTENSION_TYPE =
-  'type.googleapis.com/google.actions.v2.orders.GenericExtension';
+const {dialogflow} = require('actions-on-google');
+let app = dialogflow({
+  debug: true,
+  ordersv3: true,
+});
 
 const suggestIntents = [
   'Merchant Transaction',
@@ -45,57 +47,27 @@ app.intent('Default Welcome Intent', (conv) => {
   conv.ask(new Suggestions(suggestIntents));
 });
 
+// Check transaction requirements for Merchant payment
 app.intent('Transaction Merchant', (conv) => {
-  conv.contexts.set('merchant_pay', 5);
-  conv.ask(new TransactionRequirements({
-    orderOptions: {
-      requestDeliveryAddress: false,
-    },
-    paymentOptions: {
-      actionProvidedOptions: {
-        displayName: 'VISA-1234',
-        paymentType: 'PAYMENT_CARD',
-      },
-    },
-  }));
+  conv.ask(new TransactionRequirements());
 });
 
+// Check transaction requirements for Google payment
 app.intent('Transaction Google', (conv) => {
-  conv.contexts.set('google_pay', 5);
-  conv.ask(new TransactionRequirements({
-    orderOptions: {
-      requestDeliveryAddress: false,
-    },
-    paymentOptions: {
-      googleProvidedOptions: {
-        prepaidCardDisallowed: false,
-        supportedCardNetworks: ['VISA', 'AMEX', 'DISCOVER', 'MASTERCARD'],
-        tokenizationParameters: {
-        // Tokenization parameter data will be provided by a
-        // payment processor, i.e. Stripe, Braintree, Vantiv, etc.
-          parameters: {
-            'gateway': 'braintree',
-            'braintree:sdkVersion': '1.4.0',
-            'braintree:apiVersion': 'v1',
-            'braintree:merchantId': 'xxxxxxxxxxx',
-            'braintree:clientKey': 'sandbox_xxxxxxxxxxxxxxx',
-            'braintree:authorizationFingerprint': 'sandbox_xxxxxxxxxxxxxxx',
-          },
-          tokenizationType: 'PAYMENT_GATEWAY',
-        },
-      },
-    },
-  }));
+  conv.ask(new TransactionRequirements());
 });
 
+// Check result of transaction requirements
 app.intent('Transaction Check Complete', (conv) => {
   const arg = conv.arguments.get('TRANSACTION_REQUIREMENTS_CHECK_RESULT');
-  if (arg && arg.resultType ==='OK') {
+  if (arg && arg.resultType === 'CAN_TRANSACT') {
     // Normally take the user through cart building flow
     conv.ask(`Looks like you're good to go! ` +
-      `Try saying "Get Delivery Address".`);
-    conv.ask(new Suggestions(['Get Delivery Address']));
+      `Next I'll need your delivery address.` +
+      `Try saying "get delivery address".`);
+    conv.ask(new Suggestions('get delivery address'));
   } else {
+    // Exit conversation
     conv.close('Transaction failed.');
   }
 });
@@ -110,260 +82,397 @@ app.intent('Delivery Address', (conv) => {
 
 app.intent('Delivery Address Complete', (conv) => {
   const arg = conv.arguments.get('DELIVERY_ADDRESS_VALUE');
-  if (arg.userDecision ==='ACCEPTED') {
-    console.log('DELIVERY ADDRESS: ' +
-    arg.location.postalAddress.addressLines[0]);
-    conv.data.deliveryAddress = arg.location;
+  if (arg && arg.userDecision ==='ACCEPTED') {
+    conv.data.location = arg.location;
     conv.ask('Great, got your address! Now say "confirm transaction".');
-    conv.ask(new Suggestions(['Confirm Transaction']));
+    conv.ask(new Suggestions('confirm transaction'));
   } else {
     conv.close('I failed to get your delivery address.');
   }
 });
 
+// Ask perform the transaction / place order
 app.intent('Transaction Decision', (conv) => {
+  const location = conv.data.location;
   // Each order needs to have a unique ID
   const UNIQUE_ORDER_ID = Math.random().toString(32).substr(2);
   conv.data.UNIQUE_ORDER_ID = UNIQUE_ORDER_ID;
   const order = {
-    id: UNIQUE_ORDER_ID,
-    cart: {
-      merchant: {
-        id: 'book_store_1',
-        name: 'Book Store',
-      },
+    createTime: new Date().toISOString(),
+    lastUpdateTime: new Date().toISOString(),
+    merchantOrderId: UNIQUE_ORDER_ID, // A unique ID String for the order
+    userVisibleOrderId: UNIQUE_ORDER_ID,
+    transactionMerchant: {
+      id: 'book_store_1',
+      name: 'Book Store',
+    },
+    contents: {
       lineItems: [
         {
-          name: 'My Memoirs',
           id: 'memoirs_1',
-          price: {
-            amount: {
-              currencyCode: 'USD',
-              nanos: 990000000,
-              units: 3,
-            },
-            type: 'ACTUAL',
-          },
-          quantity: 1,
-          subLines: [
+          name: 'My Memoirs',
+          priceAttributes: [
             {
-              note: 'Note from the author',
-            },
-          ],
-          type: 'REGULAR',
-        },
-        {
-          name: 'Memoirs of a person',
-          id: 'memoirs_2',
-          price: {
-            amount: {
-              currencyCode: 'USD',
-              nanos: 990000000,
-              units: 5,
-            },
-            type: 'ACTUAL',
-          },
-          quantity: 1,
-          subLines: [
-            {
-              note: 'Special introduction by author',
-            },
-          ],
-          type: 'REGULAR',
-        },
-        {
-          name: 'Their memoirs',
-          id: 'memoirs_3',
-          price: {
-            amount: {
-              currencyCode: 'USD',
-              nanos: 750000000,
-              units: 15,
-            },
-            type: 'ACTUAL',
-          },
-          quantity: 1,
-          subLines: [
-            {
-              lineItem: {
-                name: 'Special memoir epilogue',
-                id: 'memoirs_epilogue',
-                price: {
-                  amount: {
-                    currencyCode: 'USD',
-                    nanos: 990000000,
-                    units: 3,
-                  },
-                  type: 'ACTUAL',
-                },
-                quantity: 1,
-                type: 'REGULAR',
+              type: 'REGULAR',
+              name: 'Item Price',
+              state: 'ACTUAL',
+              amount: {
+                currencyCode: 'USD',
+                amountInMicros: 3990000,
               },
+              taxIncluded: true,
+            },
+            {
+              type: 'TOTAL',
+              name: 'Total Price',
+              state: 'ACTUAL',
+              amount: {
+                currencyCode: 'USD',
+                amountInMicros: 3990000,
+              },
+              taxIncluded: true,
             },
           ],
-          type: 'REGULAR',
+          notes: [
+            'Note from the author.',
+          ],
+          purchase: {
+            quantity: 1,
+          },
         },
         {
-          name: 'Our memoirs',
-          id: 'memoirs_4',
-          price: {
-            amount: {
-              currencyCode: 'USD',
-              nanos: 490000000,
-              units: 6,
+            id: 'memoirs_2',
+            name: 'Memoirs of a person',
+            priceAttributes: [
+                {
+                type: 'REGULAR',
+                name: 'Item Price',
+                state: 'ACTUAL',
+                amount: {
+                    currencyCode: 'USD',
+                    amountInMicros: 5990000,
+                },
+                taxIncluded: true,
+                },
+                {
+                type: 'TOTAL',
+                name: 'Total Price',
+                state: 'ACTUAL',
+                amount: {
+                    currencyCode: 'USD',
+                    amountInMicros: 5990000,
+                },
+                taxIncluded: true,
+                },
+            ],
+            notes: [
+                'Special introduction by author.',
+            ],
+            purchase: {
+                quantity: 1,
             },
-            type: 'ACTUAL',
-          },
-          quantity: 1,
-          subLines: [
-            {
-              note: 'Special introduction by author',
+        },
+        {
+            id: 'memoirs_3',
+            name: 'Their memoirs',
+            priceAttributes: [
+                {
+                type: 'REGULAR',
+                name: 'Item Price',
+                state: 'ACTUAL',
+                amount: {
+                    currencyCode: 'USD',
+                    amountInMicros: 15750000,
+                },
+                taxIncluded: true,
+                },
+                {
+                type: 'TOTAL',
+                name: 'Total Price',
+                state: 'ACTUAL',
+                amount: {
+                    currencyCode: 'USD',
+                    amountInMicros: 15750000,
+                },
+                taxIncluded: true,
+                },
+            ],
+            purchase: {
+                quantity: 1,
+                itemOptions: [
+                    {
+                      id: 'memoirs_epilogue',
+                      name: 'Special memoir epilogue',
+                      prices: [
+                        {
+                          type: 'REGULAR',
+                          state: 'ACTUAL',
+                          name: 'Item Price',
+                          amount: {
+                            currencyCode: 'USD',
+                            amountInMicros: 3990000,
+                          },
+                          taxIncluded: true,
+                        },
+                        {
+                          type: 'TOTAL',
+                          name: 'Total Price',
+                          state: 'ACTUAL',
+                          amount: {
+                            currencyCode: 'USD',
+                            amountInMicros: 3990000,
+                          },
+                          taxIncluded: true,
+                        },
+                      ],
+                      quantity: 1,
+                    },
+                ],
             },
-          ],
-          type: 'REGULAR',
+        },
+        {
+            id: 'memoirs_4',
+            name: 'Our memoirs',
+            priceAttributes: [
+                {
+                type: 'REGULAR',
+                name: 'Item Price',
+                state: 'ACTUAL',
+                amount: {
+                    currencyCode: 'USD',
+                    amountInMicros: 6490000,
+                },
+                taxIncluded: true,
+                },
+                {
+                type: 'TOTAL',
+                name: 'Total Price',
+                state: 'ACTUAL',
+                amount: {
+                    currencyCode: 'USD',
+                    amountInMicros: 6490000,
+                },
+                taxIncluded: true,
+                },
+            ],
+            notes: [
+                'Special introduction by author.',
+            ],
+            purchase: {
+                quantity: 1,
+            },
         },
       ],
-      notes: 'The Memoir collection',
-      otherItems: [],
     },
-    otherItems: [
+    buyerInfo: {
+      email: 'janedoe@gmail.com',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      displayName: 'Jane Doe',
+    },
+    priceAttributes: [
       {
-        name: 'Subtotal',
-        id: 'subtotal',
-        price: {
-          amount: {
-            currencyCode: 'USD',
-            nanos: 220000000,
-            units: 32,
-          },
-          type: 'ESTIMATE',
-        },
         type: 'SUBTOTAL',
+        name: 'Subtotal',
+        state: 'ESTIMATE',
+        amount: {
+          currencyCode: 'USD',
+          amountInMicros: 32220000,
+        },
+        taxIncluded: true,
       },
       {
-        name: 'Tax',
-        id: 'tax',
-        price: {
-          amount: {
-            currencyCode: 'USD',
-            nanos: 780000000,
-            units: 2,
-          },
-          type: 'ESTIMATE',
+        type: 'DELIVERY',
+        name: 'Delivery',
+        state: 'ACTUAL',
+        amount: {
+          currencyCode: 'USD',
+          amountInMicros: 2000000,
         },
+        taxIncluded: true,
+      },
+      {
         type: 'TAX',
+        name: 'Tax',
+        state: 'ESTIMATE',
+        amount: {
+          currencyCode: 'USD',
+          amountInMicros: 2780000,
+        },
+        taxIncluded: true,
+      },
+      {
+        type: 'TOTAL',
+        name: 'Total Price',
+        state: 'ESTIMATE',
+        amount: {
+          currencyCode: 'USD',
+          amountInMicros: 37000000,
+        },
+        taxIncluded: true,
       },
     ],
-    totalPrice: {
-      amount: {
-        currencyCode: 'USD',
-        nanos: 0,
-        units: 35,
+    followUpActions: [
+      {
+        type: 'VIEW_DETAILS',
+        title: 'View details',
+        openUrlAction: {
+          url: 'http://example.com',
+        },
       },
-      type: 'ESTIMATE',
+      {
+        type: 'CALL',
+        title: 'Call us',
+        openUrlAction: {
+          url: 'tel:+16501112222',
+        },
+      },
+      {
+        type: 'EMAIL',
+        title: 'Email us',
+        openUrlAction: {
+          url: 'mailto:person@example.com',
+        },
+      },
+    ],
+    termsOfServiceUrl: 'http://www.example.com',
+    note: 'The Memoir collection',
+    purchase: {
+      status: 'CREATED',
+      userVisibleStatusLabel: 'CREATED',
+      type: 'RETAIL',
+      returnsInfo: {
+        isReturnable: false,
+        daysToReturn: 1,
+        policyUrl: 'http://www.example.com',
+      },
+      fulfillmentInfo: {
+        id: 'FULFILLMENT_SERVICE_ID',
+        fulfillmentType: 'DELIVERY',
+        expectedFulfillmentTime: {
+          timeIso8601: '2025-09-25T18:00:00.877Z',
+        },
+        location: location,
+        price: {
+          type: 'REGULAR',
+          name: 'Delivery Price',
+          state: 'ACTUAL',
+          amount: {
+            currencyCode: 'USD',
+            amountInMicros: 2000000,
+          },
+          taxIncluded: true,
+        },
+        fulfillmentContact: {
+          email: 'johnjohnson@gmail.com',
+          firstName: 'John',
+          lastName: 'Johnson',
+          displayName: 'John Johnson',
+        },
+      },
+      purchaseLocationType: 'ONLINE_PURCHASE',
     },
   };
 
-  if (conv.data.deliveryAddress) {
-    order.extension = {
-      '@type': GENERIC_EXTENSION_TYPE,
-      'locations': [
-        {
-          type: 'DELIVERY',
-          location: {
-            postalAddress: conv.data.deliveryAddress.postalAddress,
-          },
-        },
-      ],
-    };
-  }
+  const presentationOptions = {
+    actionDisplayName: 'PLACE_ORDER',
+  };
 
-  if (conv.contexts.get('google_pay') != null) {
+  const orderOptions = {
+    userInfoOptions: {
+      userInfoProperties: [
+        'EMAIL',
+      ],
+    },
+  };
+
+  conv.ask('Transaction Decision Placeholder.');
+  if (conv.contexts.get('google_payment')) {
     conv.ask(new TransactionDecision({
-      orderOptions: {
-        requestDeliveryAddress: true,
-      },
-      paymentOptions: {
-        googleProvidedOptions: {
-          prepaidCardDisallowed: false,
-          supportedCardNetworks: ['VISA', 'AMEX', 'DISCOVER', 'MASTERCARD'],
-          tokenizationParameters: {
-            // Tokenization parameter data  will be provided by
-            // a payment processor, like Stripe, Braintree, Vantiv, etc.
-            parameters: {
-              'gateway': 'braintree',
-              'braintree:sdkVersion': '1.4.0',
-              'braintree:apiVersion': 'v1',
-              'braintree:merchantId': 'xxxxxxxxxxx',
-              'braintree:clientKey': 'sandbox_xxxxxxxxxxxxxxx',
-              'braintree:authorizationFingerprint': 'sandbox_xxxxxxxxxxxxxxx',
+      paymentParameters: {
+        googlePaymentOption: {
+          // facilitationSpec is expected to be a serialized JSON string
+          facilitationSpec: JSON.stringify({
+            environment: 'TEST',
+            apiVersion: 2,
+            apiVersionMinor: 0,
+            merchantInfo: {
+              merchantName: 'Example Merchant',
             },
-            tokenizationType: 'PAYMENT_GATEWAY',
-          },
+            allowedPaymentMethods: [
+              {
+                type: 'CARD',
+                parameters: {
+                  allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                  allowedCardNetworks: [
+                    'AMEX', 'DISCOVER', 'JCB', 'MASTERCARD', 'VISA'],
+                },
+                tokenizationSpecification: {
+                  type: 'PAYMENT_GATEWAY',
+                  parameters: {
+                    gateway: 'example',
+                    gatewayMerchantId: 'exampleGatewayMerchantId',
+                  },
+                },
+              },
+            ],
+            transactionInfo: {
+              totalPriceStatus: 'FINAL',
+              totalPrice: '37.00',
+              currencyCode: 'USD',
+            },
+          }),
         },
       },
-      proposedOrder: order,
+      presentationOptions,
+      orderOptions,
+      order,
     }));
   } else {
     conv.ask(new TransactionDecision({
-      orderOptions: {
-        requestDeliveryAddress: true,
-      },
-      paymentOptions: {
-        actionProvidedOptions: {
-          paymentType: 'PAYMENT_CARD',
-          displayName: 'VISA-1234',
+      paymentParameters: {
+        merchantPaymentOption: {
+          defaultMerchantPaymentMethodId: '12345678',
+          managePaymentMethodUrl: 'https://example.com/managePayment',
+          merchantPaymentMethod: [
+            {
+              paymentMethodDisplayInfo: {
+                paymentMethodDisplayName: 'VISA **** 1234',
+                paymentType: 'PAYMENT_CARD',
+              },
+              paymentMethodGroup: 'Payment method group',
+              paymentMethodId: '12345678',
+              paymentMethodStatus: {
+                status: 'STATUS_OK',
+                statusMessage: 'Status message',
+              },
+            },
+          ],
         },
       },
-      proposedOrder: order,
+      presentationOptions,
+      orderOptions,
+      order,
     }));
   }
 });
 
+// Check result of asking to perform transaction / place order
 app.intent('Transaction Decision Complete', (conv) => {
-  console.log('Transaction decision complete');
   const arg = conv.arguments.get('TRANSACTION_DECISION_VALUE');
-  if (arg && arg.userDecision ==='ORDER_ACCEPTED') {
-    const finalOrderId = arg.order.finalOrder.id;
+  if (arg && arg.transactionDecision === 'ORDER_ACCEPTED') {
+    const order = arg.order;
+    // Set lastUpdateTime and update status of order
+    order.lastUpdateTime = new Date().toISOString();
+    order.purchase.status = 'CONFIRMED';
+    order.purchase.userVisibleStatusLabel = 'Order confirmed';
 
-    if (conv.contexts.get('google_pay') != null) {
-      const paymentDisplayName = arg.order.paymentInfo.displayName;
-    }
-
-    conv.ask(new OrderUpdate({
-      actionOrderId: finalOrderId,
-      orderState: {
-        label: 'Order created',
-        state: 'CREATED',
-      },
-      lineItemUpdates: {},
-      updateTime: new Date().toISOString(),
-      receipt: {
-        confirmedActionOrderId: conv.data.UNIQUE_ORDER_ID,
-      },
-      orderManagementActions: [
-        {
-          button: {
-            openUrlAction: {
-              // Replace the URL with your own customer service page
-              url: 'http://example.com/customer-service',
-            },
-            title: 'Customer Service',
-          },
-          type: 'CUSTOMER_SERVICE',
-        },
-      ],
-      userNotification: {
-        text: 'Notification text.',
-        title: 'Notification Title',
-      },
-    }));
+    // Send synchronous order update
     conv.ask(`Transaction completed! Your order ${conv.data.UNIQUE_ORDER_ID} is all set!`);
-  } else if (arg && arg.userDecision === 'DELIVERY_ADDRESS_UPDATED') {
-    conv.ask(new DeliveryAddress({
-      addressOptions: {
-        reason: 'To know where to send the order',
-      },
+    conv.ask(new OrderUpdate({
+      type: 'SNAPSHOT',
+      reason: 'Reason string',
+      order: order,
     }));
   } else {
     conv.close('Transaction failed.');
