@@ -9,7 +9,9 @@ This sample shows everything you need to facilitate transactions, including:
   + Examples of Google Pay and merchant-managed payment options
   + Asynchronously update order status at any time (via `order-update.js`)
 
-:warning: This code sample was built using Dialogflow. We now recommend using [Actions Builder or the Actions SDK](https://developers.google.com/assistant/conversational/overview) to develop, test, and deploy Conversational Actions.
+*:warning: This code sample was built using Dialogflow. We now recommend using [Actions Builder or the Actions SDK](https://developers.google.com/assistant/conversational/overview) to develop, test, and deploy Conversational Actions.*
+
+*:warning: Warning: Due to new regulatory requirements, transaction functionalities for Conversational Actions will not be available in the following countries after May 1, 2022: Denmark, France, Germany, Italy, the Netherlands, Norway, Spain, Sweden, Poland*
 
 ## Setup Instructions
 ### Prerequisites
