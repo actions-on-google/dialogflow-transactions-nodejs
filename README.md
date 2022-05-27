@@ -1,5 +1,9 @@
 # Actions on Google: Transactions Sample
 
+*:warning: Warning: Conversational Actions will be deprecated on June 13, 2023. For more information, 
+see [Conversational Actions Sunset](https://goo.gle/ca-sunset).*
+
+
 This sample demonstrates Actions on Google features for use on Google Assistant including physical transactions -- using the [Node.js client library](https://github.com/actions-on-google/actions-on-google-nodejs) and deployed on [Cloud Functions for Firebase](https://firebase.google.com/docs/functions/).
 
 This sample shows everything you need to facilitate transactions, including:
